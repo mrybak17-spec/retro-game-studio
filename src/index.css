@@ -2,95 +2,103 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
+/* Windows 95/98 Retro Design System */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Desktop & Background */
+    --background: 180 100% 25%; /* Classic teal desktop */
+    --foreground: 0 0% 0%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Window Chrome */
+    --window: 0 0% 75%; /* Silver gray */
+    --window-foreground: 0 0% 0%;
+    --window-border-light: 0 0% 100%;
+    --window-border-dark: 0 0% 50%;
+    --window-border-darker: 0 0% 0%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    /* Title Bar */
+    --titlebar: 240 100% 25%; /* Navy blue */
+    --titlebar-foreground: 0 0% 100%;
+    --titlebar-inactive: 0 0% 50%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Buttons */
+    --primary: 0 0% 75%;
+    --primary-foreground: 0 0% 0%;
+    --primary-hover: 0 0% 80%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary elements */
+    --secondary: 0 0% 85%;
+    --secondary-foreground: 0 0% 0%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Input fields */
+    --input: 0 0% 100%;
+    --input-foreground: 0 0% 0%;
+    --input-border: 0 0% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Selection & Focus */
+    --accent: 240 100% 25%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Status & Feedback */
+    --success: 120 100% 25%;
+    --success-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 0%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Muted */
+    --muted: 0 0% 65%;
+    --muted-foreground: 0 0% 35%;
 
-    --radius: 0.5rem;
+    /* Card (same as window) */
+    --card: 0 0% 75%;
+    --card-foreground: 0 0% 0%;
 
-    --sidebar-background: 0 0% 98%;
+    /* Popover */
+    --popover: 0 0% 75%;
+    --popover-foreground: 0 0% 0%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Border & Ring */
+    --border: 0 0% 50%;
+    --ring: 240 100% 25%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    --radius: 0px;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Sidebar (for Windows explorer style) */
+    --sidebar-background: 0 0% 75%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 240 100% 25%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 85%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 50%;
+    --sidebar-ring: 240 100% 25%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
+    /* Game-specific colors */
+    --grid-cell: 60 100% 85%;
+    --grid-cell-hover: 60 100% 75%;
+    --wheel-segment-1: 0 80% 60%;
+    --wheel-segment-2: 210 80% 60%;
+    --wheel-segment-3: 120 80% 50%;
+    --wheel-segment-4: 45 100% 60%;
+    --wheel-segment-5: 280 80% 60%;
+    --wheel-segment-6: 180 80% 50%;
 
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Pixel drawing */
+    --canvas-bg: 300 100% 50%; /* Magenta - will be transparent */
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Keep same for retro consistency */
+    --background: 180 100% 25%;
+    --foreground: 0 0% 0%;
+    --window: 0 0% 75%;
+    --window-foreground: 0 0% 0%;
+    --titlebar: 240 100% 25%;
+    --titlebar-foreground: 0 0% 100%;
   }
 }
 
@@ -101,5 +109,408 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 11px;
+    image-rendering: pixelated;
   }
+
+  /* Pixel font for special elements */
+  .font-pixel {
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+  }
+}
+
+/* Classic Windows 95 Button - Using raw CSS to avoid @apply issues */
+.win95-button {
+  padding: 0.25rem 1rem;
+  background-color: hsl(var(--window));
+  color: hsl(var(--window-foreground));
+  cursor: pointer;
+  user-select: none;
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  border-bottom: 2px solid hsl(var(--window-border-darker));
+  box-shadow: inset -1px -1px 0 hsl(var(--window-border-dark)),
+              inset 1px 1px 0 hsl(var(--window-border-light));
+}
+
+.win95-button:active,
+.win95-button-pressed {
+  border-top: 2px solid hsl(var(--window-border-darker));
+  border-left: 2px solid hsl(var(--window-border-darker));
+  border-right: 2px solid hsl(var(--window-border-light));
+  border-bottom: 2px solid hsl(var(--window-border-light));
+  box-shadow: inset 1px 1px 0 hsl(var(--window-border-dark)),
+              inset -1px -1px 0 hsl(var(--window-border-light));
+  padding-left: 17px;
+  padding-top: 5px;
+}
+
+.win95-button:focus {
+  outline: 1px dotted hsl(var(--foreground));
+  outline-offset: -4px;
+}
+
+.win95-button:disabled {
+  color: hsl(var(--muted-foreground));
+  cursor: not-allowed;
+}
+
+/* Inset panel (for content areas) */
+.win95-inset {
+  background-color: hsl(var(--input));
+  border-top: 2px solid hsl(var(--window-border-dark));
+  border-left: 2px solid hsl(var(--window-border-dark));
+  border-right: 2px solid hsl(var(--window-border-light));
+  border-bottom: 2px solid hsl(var(--window-border-light));
+  box-shadow: inset 1px 1px 0 hsl(var(--window-border-darker)),
+              inset -1px -1px 0 hsl(var(--window-border-light));
+}
+
+/* Raised panel */
+.win95-raised {
+  background-color: hsl(var(--window));
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  border-bottom: 2px solid hsl(var(--window-border-darker));
+  box-shadow: inset -1px -1px 0 hsl(var(--window-border-dark));
+}
+
+/* Window frame */
+.win95-window {
+  background-color: hsl(var(--window));
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  border-bottom: 2px solid hsl(var(--window-border-darker));
+  box-shadow: 1px 1px 0 hsl(var(--window-border-darker));
+}
+
+/* Title bar */
+.win95-titlebar {
+  background: linear-gradient(90deg, hsl(var(--titlebar)) 0%, hsl(210 80% 40%) 100%);
+  color: hsl(var(--titlebar-foreground));
+  padding: 0.125rem 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.win95-titlebar-inactive {
+  background: linear-gradient(90deg, hsl(var(--titlebar-inactive)) 0%, hsl(0 0% 65%) 100%);
+  color: hsl(var(--window));
+}
+
+/* Title bar button */
+.win95-titlebar-btn {
+  width: 1rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  background-color: hsl(var(--window));
+  border-top: 1px solid hsl(var(--window-border-light));
+  border-left: 1px solid hsl(var(--window-border-light));
+  border-right: 1px solid hsl(var(--window-border-darker));
+  border-bottom: 1px solid hsl(var(--window-border-darker));
+}
+
+.win95-titlebar-btn:active {
+  border-top: 1px solid hsl(var(--window-border-darker));
+  border-left: 1px solid hsl(var(--window-border-darker));
+  border-right: 1px solid hsl(var(--window-border-light));
+  border-bottom: 1px solid hsl(var(--window-border-light));
+}
+
+/* Input field */
+.win95-input {
+  background-color: hsl(var(--input));
+  color: hsl(var(--input-foreground));
+  padding: 0.125rem 0.25rem;
+  border-top: 1px solid hsl(var(--window-border-dark));
+  border-left: 1px solid hsl(var(--window-border-dark));
+  border-right: 1px solid hsl(var(--window-border-light));
+  border-bottom: 1px solid hsl(var(--window-border-light));
+  box-shadow: inset 1px 1px 0 hsl(var(--window-border-darker));
+}
+
+.win95-input:focus {
+  outline: none;
+}
+
+/* Scrollbar styling */
+.win95-scrollbar::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+.win95-scrollbar::-webkit-scrollbar-track {
+  background: repeating-conic-gradient(hsl(var(--window)) 0% 25%, hsl(var(--window-border-light)) 0% 50%) 
+              50% / 2px 2px;
+}
+
+.win95-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(var(--window));
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  border-bottom: 2px solid hsl(var(--window-border-darker));
+}
+
+/* Menu bar */
+.win95-menubar {
+  background-color: hsl(var(--window));
+  display: flex;
+  gap: 0;
+  padding: 0 0.25rem;
+  border-bottom: 1px solid hsl(var(--window-border-dark));
+}
+
+.win95-menubar-item {
+  padding: 0.125rem 0.5rem;
+  cursor: pointer;
+}
+
+.win95-menubar-item:hover {
+  background-color: hsl(var(--titlebar));
+  color: hsl(var(--titlebar-foreground));
+}
+
+/* Status bar */
+.win95-statusbar {
+  background-color: hsl(var(--window));
+  padding: 0.125rem 0.25rem;
+  display: flex;
+  align-items: center;
+  border-top: 1px solid hsl(var(--window-border-dark));
+}
+
+.win95-statusbar-section {
+  padding: 0 0.5rem;
+  border-top: 1px solid hsl(var(--window-border-dark));
+  border-left: 1px solid hsl(var(--window-border-dark));
+  border-right: 1px solid hsl(var(--window-border-light));
+  border-bottom: 1px solid hsl(var(--window-border-light));
+}
+
+/* Desktop icon */
+.win95-icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  user-select: none;
+  width: 70px;
+}
+
+.win95-icon:hover {
+  background-color: hsla(var(--titlebar) / 0.2);
+}
+
+.win95-icon.selected {
+  background-color: hsl(var(--titlebar));
+  color: hsl(var(--titlebar-foreground));
+}
+
+.win95-icon-image {
+  width: 2rem;
+  height: 2rem;
+  image-rendering: pixelated;
+}
+
+.win95-icon-label {
+  text-align: center;
+  color: white;
+  font-size: 0.75rem;
+  text-shadow: 1px 1px 0 black;
+}
+
+/* Tab styling */
+.win95-tab {
+  padding: 0.25rem 0.75rem;
+  background-color: hsl(var(--window));
+  cursor: pointer;
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  margin-bottom: -2px;
+  position: relative;
+}
+
+.win95-tab.active {
+  background-color: hsl(var(--window));
+  border-bottom: 2px solid hsl(var(--window));
+  z-index: 1;
+}
+
+.win95-tab-content {
+  padding: 0.75rem;
+  background-color: hsl(var(--window));
+  border: 2px solid;
+  border-color: hsl(var(--window-border-light)) hsl(var(--window-border-darker)) 
+                hsl(var(--window-border-darker)) hsl(var(--window-border-light));
+}
+
+/* Grid cell for game board */
+.win95-grid-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  background-color: hsl(var(--grid-cell));
+  border-top: 2px solid hsl(var(--window-border-light));
+  border-left: 2px solid hsl(var(--window-border-light));
+  border-right: 2px solid hsl(var(--window-border-darker));
+  border-bottom: 2px solid hsl(var(--window-border-darker));
+  transition: background-color 0.1s;
+}
+
+.win95-grid-cell:hover {
+  background-color: hsl(var(--grid-cell-hover));
+}
+
+/* Checkbox */
+.win95-checkbox {
+  width: 1rem;
+  height: 1rem;
+  appearance: none;
+  cursor: pointer;
+  background-color: hsl(var(--input));
+  border-top: 1px solid hsl(var(--window-border-dark));
+  border-left: 1px solid hsl(var(--window-border-dark));
+  border-right: 1px solid hsl(var(--window-border-light));
+  border-bottom: 1px solid hsl(var(--window-border-light));
+}
+
+.win95-checkbox:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='black' d='M13 3l-7 7-3-3-1 1 4 4 8-8z'/%3E%3C/svg%3E");
+  background-size: 12px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Progress bar */
+.win95-progress {
+  height: 1rem;
+  width: 100%;
+  border-top: 1px solid hsl(var(--window-border-dark));
+  border-left: 1px solid hsl(var(--window-border-dark));
+  border-right: 1px solid hsl(var(--window-border-light));
+  border-bottom: 1px solid hsl(var(--window-border-light));
+}
+
+.win95-progress-bar {
+  height: 100%;
+  background-color: hsl(var(--titlebar));
+  background-image: repeating-linear-gradient(
+    90deg,
+    hsl(var(--titlebar)) 0px,
+    hsl(var(--titlebar)) 8px,
+    transparent 8px,
+    transparent 10px
+  );
+}
+
+/* Tooltip */
+.win95-tooltip {
+  position: absolute;
+  background-color: #ffffe1;
+  color: black;
+  padding: 0.125rem 0.25rem;
+  font-size: 0.75rem;
+  z-index: 50;
+  border: 1px solid black;
+}
+
+/* Dialog overlay */
+.win95-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* Group box */
+.win95-groupbox {
+  padding: 0.75rem;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  position: relative;
+  border: 1px solid hsl(var(--window-border-dark));
+  box-shadow: 1px 1px 0 hsl(var(--window-border-light));
+}
+
+.win95-groupbox-label {
+  position: absolute;
+  top: -0.5rem;
+  left: 0.5rem;
+  padding: 0 0.25rem;
+  background-color: hsl(var(--window));
+  font-size: 0.75rem;
+}
+
+/* Speech bubble for chat */
+.speech-bubble {
+  position: relative;
+  background-color: white;
+  color: black;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  max-width: 16rem;
+  border: 2px solid black;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -0.5rem;
+  left: 1rem;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid black;
+}
+
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -0.25rem;
+  left: calc(1rem + 2px);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid white;
+  z-index: 1;
+}
+
+/* Animations */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-blink {
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  animation: marquee 10s linear infinite;
 }

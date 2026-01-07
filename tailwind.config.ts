@@ -2,7 +2,12 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./pages/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+  ],
   prefix: "",
   theme: {
     container: {
@@ -19,6 +24,18 @@ export default {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        window: {
+          DEFAULT: "hsl(var(--window))",
+          foreground: "hsl(var(--window-foreground))",
+          "border-light": "hsl(var(--window-border-light))",
+          "border-dark": "hsl(var(--window-border-dark))",
+          "border-darker": "hsl(var(--window-border-darker))",
+        },
+        titlebar: {
+          DEFAULT: "hsl(var(--titlebar))",
+          foreground: "hsl(var(--titlebar-foreground))",
+          inactive: "hsl(var(--titlebar-inactive))",
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -30,6 +47,14 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -57,28 +82,39 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        grid: {
+          cell: "hsl(var(--grid-cell))",
+          "cell-hover": "hsl(var(--grid-cell-hover))",
+        },
+        wheel: {
+          1: "hsl(var(--wheel-segment-1))",
+          2: "hsl(var(--wheel-segment-2))",
+          3: "hsl(var(--wheel-segment-3))",
+          4: "hsl(var(--wheel-segment-4))",
+          5: "hsl(var(--wheel-segment-5))",
+          6: "hsl(var(--wheel-segment-6))",
+        },
+        canvas: {
+          bg: "hsl(var(--canvas-bg))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
+      fontFamily: {
+        pixel: ["VT323", "monospace"],
+        system: ["MS Sans Serif", "Segoe UI", "Tahoma", "Geneva", "Verdana", "sans-serif"],
+      },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
