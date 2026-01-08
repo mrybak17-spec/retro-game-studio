@@ -55,10 +55,21 @@ export interface WheelGame {
 
 export type Game = GridGame | SlidesGame | WheelGame;
 
+// Game Show - Collection of multiple games
+export interface GameShow {
+  id: string;
+  name: string;
+  description: string;
+  games: Game[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface Player {
   id: string;
   name: string;
   isHost: boolean;
+  isFake: boolean; // For testing without backend
   drawing?: string; // Base64 or data URL of pixel drawing
   points: number;
   isReady: boolean;
@@ -67,7 +78,8 @@ export interface Player {
 export interface GameSession {
   id: string;
   code: string;
-  game: Game;
+  gameShow: GameShow;
+  currentGameIndex: number;
   players: Player[];
   hostId: string;
   status: 'lobby' | 'drawing' | 'playing' | 'ended';
@@ -89,4 +101,5 @@ export interface ChatMessage {
 export interface ValidationError {
   field: string;
   message: string;
+  gameId?: string;
 }
