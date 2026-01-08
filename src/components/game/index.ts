@@ -3,3 +3,5 @@ export { SlidesGameCreator } from './SlidesGameCreator';
 export { WheelGameCreator } from './WheelGameCreator';
 export { GamesLibrary } from './GamesLibrary';
 export { NewGameWizard } from './NewGameWizard';
+export { GameShowCreator } from './GameShowCreator';
+export { GameLobby } from './GameLobby';
