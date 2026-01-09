@@ -5,3 +5,6 @@ export { GamesLibrary } from './GamesLibrary';
 export { NewGameWizard } from './NewGameWizard';
 export { GameShowCreator } from './GameShowCreator';
 export { GameLobby } from './GameLobby';
+export { GameShowWizard } from './GameShowWizard';
+export { CharacterDrawing } from './CharacterDrawing';
+export { GamePlayScreen } from './GamePlayScreen';
