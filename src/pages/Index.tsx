@@ -1,31 +1,22 @@
 import React, { useState } from 'react';
 import { DesktopIcon, Taskbar, StartMenu, Dialog } from '@/components/win95';
 import {
-  GridGameCreator,
-  SlidesGameCreator,
-  WheelGameCreator,
+  GameShowWizard,
   GamesLibrary,
-  NewGameWizard,
+  GameLobby,
+  CharacterDrawing,
+  GamePlayScreen,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
-import { Game, GridGame, SlidesGame, WheelGame } from '@/types/game';
+import { Game, GameShow } from '@/types/game';
 import { 
-  Grid3X3, 
-  Presentation, 
-  CircleDot, 
   FolderOpen, 
   FileText,
   HelpCircle,
-  Play
+  Tv
 } from 'lucide-react';
 
-type WindowType = 
-  | 'newGame'
-  | 'gridCreator'
-  | 'slidesCreator'
-  | 'wheelCreator'
-  | 'gamesLibrary'
-  | null;
+type WindowType = 'newShow' | 'gamesLibrary' | 'lobby' | 'drawing' | 'playing' | null;
 
 interface DialogState {
   show: boolean;
@@ -38,7 +29,8 @@ interface DialogState {
 const Index = () => {
   const [activeWindow, setActiveWindow] = useState<WindowType>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
-  const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [pendingGameShow, setPendingGameShow] = useState<GameShow | null>(null);
+  const [drawingPlayerIndex, setDrawingPlayerIndex] = useState(0);
   const [dialog, setDialog] = useState<DialogState>({
     show: false,
     title: '',
@@ -46,116 +38,58 @@ const Index = () => {
     type: 'info',
   });
 
-  const { games, addGame, updateGame, deleteGame, validateGame, validationErrors } = useGameStore();
+  const { games, gameShows, addGameShow, currentSession, setPlayerReady } = useGameStore();
 
-  const handleNewGame = (type: 'grid' | 'slides' | 'wheel') => {
+  const handleSaveGameShow = (show: GameShow) => {
+    addGameShow(show);
     setActiveWindow(null);
-    setEditingGame(null);
-    
-    switch (type) {
-      case 'grid':
-        setActiveWindow('gridCreator');
-        break;
-      case 'slides':
-        setActiveWindow('slidesCreator');
-        break;
-      case 'wheel':
-        setActiveWindow('wheelCreator');
-        break;
-    }
-  };
-
-  const handleSaveGame = (game: Game) => {
-    const errors = validateGame(game);
-    
-    if (errors.length > 0) {
-      setDialog({
-        show: true,
-        title: 'Validation Error',
-        message: `Please fix the following:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`,
-        type: 'warning',
-      });
-      return;
-    }
-
-    if (editingGame) {
-      updateGame(game.id, game);
-    } else {
-      addGame(game);
-    }
-    
-    setActiveWindow(null);
-    setEditingGame(null);
-    
     setDialog({
       show: true,
       title: 'Success',
-      message: `Game "${game.name}" has been saved successfully!`,
+      message: `Game Show "${show.name}" saved with ${show.games.length} games!`,
       type: 'info',
     });
   };
 
-  const handleEditGame = (game: Game) => {
-    setEditingGame(game);
+  const handlePlayShow = (show: GameShow) => {
+    setPendingGameShow(show);
+    setActiveWindow('lobby');
+  };
+
+  const handleStartGame = () => {
+    setDrawingPlayerIndex(0);
+    setActiveWindow('drawing');
+  };
+
+  const handleDrawingComplete = (drawing: string) => {
+    if (!currentSession) return;
+    const players = currentSession.players;
     
-    switch (game.type) {
-      case 'grid':
-        setActiveWindow('gridCreator');
-        break;
-      case 'slides':
-        setActiveWindow('slidesCreator');
-        break;
-      case 'wheel':
-        setActiveWindow('wheelCreator');
-        break;
+    // Update current player's drawing
+    const player = players[drawingPlayerIndex];
+    if (player) {
+      player.drawing = drawing;
+      setPlayerReady(player.id, true);
     }
-  };
-
-  const handleDeleteGame = (id: string) => {
-    const game = games.find(g => g.id === id);
-    setDialog({
-      show: true,
-      title: 'Confirm Delete',
-      message: `Are you sure you want to delete "${game?.name}"? This action cannot be undone.`,
-      type: 'question',
-      onConfirm: () => deleteGame(id),
-    });
-  };
-
-  const handlePlayGame = (game: Game) => {
-    setDialog({
-      show: true,
-      title: 'Coming Soon!',
-      message: 'Multiplayer game sessions require a backend connection. Enable Lovable Cloud to unlock real-time multiplayer with game codes, lobbies, and character drawing!',
-      type: 'info',
-    });
+    
+    // Move to next player or start game
+    if (drawingPlayerIndex < players.length - 1) {
+      setDrawingPlayerIndex(drawingPlayerIndex + 1);
+    } else {
+      setActiveWindow('playing');
+    }
   };
 
   const desktopIcons = [
     {
-      icon: <FileText className="w-8 h-8 text-yellow-300" />,
-      label: 'New Game',
-      onClick: () => setActiveWindow('newGame'),
+      icon: <Tv className="w-8 h-8 text-purple-400" />,
+      label: 'New Game Show',
+      onClick: () => setActiveWindow('newShow'),
     },
     {
       icon: <FolderOpen className="w-8 h-8 text-yellow-400" />,
-      label: 'My Games',
+      label: 'My Shows',
       onClick: () => setActiveWindow('gamesLibrary'),
-    },
-    {
-      icon: <Grid3X3 className="w-8 h-8 text-blue-400" />,
-      label: 'Grid Game',
-      onClick: () => handleNewGame('grid'),
-    },
-    {
-      icon: <Presentation className="w-8 h-8 text-green-400" />,
-      label: 'Slides Game',
-      onClick: () => handleNewGame('slides'),
-    },
-    {
-      icon: <CircleDot className="w-8 h-8 text-red-400" />,
-      label: 'Wheel Game',
-      onClick: () => handleNewGame('wheel'),
     },
     {
       icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
@@ -163,180 +97,71 @@ const Index = () => {
       onClick: () => setDialog({
         show: true,
         title: 'Game Show Maker Help',
-        message: 'Welcome to Game Show Maker 95!\n\n• Create games using the desktop icons\n• Save your games to access them later\n• Enable multiplayer with Lovable Cloud\n\nDouble-click icons to open!',
+        message: 'Welcome to Game Show Maker 95!\n\n• Click "New Game Show" to create a show\n• Add multiple games (Grid, Slides, Wheel)\n• Save and play with fake players for testing!',
         type: 'info',
       }),
     },
   ];
 
   const startMenuItems = [
-    {
-      id: 'new',
-      icon: <FileText className="w-6 h-6" />,
-      label: 'New Game',
-      onClick: () => setActiveWindow('newGame'),
-    },
-    {
-      id: 'games',
-      icon: <FolderOpen className="w-6 h-6" />,
-      label: 'My Games',
-      onClick: () => setActiveWindow('gamesLibrary'),
-    },
-    {
-      id: 'grid',
-      icon: <Grid3X3 className="w-6 h-6" />,
-      label: 'Grid Game',
-      onClick: () => handleNewGame('grid'),
-    },
-    {
-      id: 'slides',
-      icon: <Presentation className="w-6 h-6" />,
-      label: 'Slides Game',
-      onClick: () => handleNewGame('slides'),
-    },
-    {
-      id: 'wheel',
-      icon: <CircleDot className="w-6 h-6" />,
-      label: 'Wheel Game',
-      onClick: () => handleNewGame('wheel'),
-    },
+    { id: 'new', icon: <Tv className="w-6 h-6" />, label: 'New Game Show', onClick: () => setActiveWindow('newShow') },
+    { id: 'shows', icon: <FolderOpen className="w-6 h-6" />, label: 'My Shows', onClick: () => setActiveWindow('gamesLibrary') },
   ];
 
   const taskbarItems = activeWindow
-    ? [
-        {
-          id: activeWindow,
-          title:
-            activeWindow === 'newGame'
-              ? 'New Game Wizard'
-              : activeWindow === 'gridCreator'
-              ? 'Grid Game Creator'
-              : activeWindow === 'slidesCreator'
-              ? 'Slides Game Creator'
-              : activeWindow === 'wheelCreator'
-              ? 'Wheel Game Creator'
-              : 'My Games',
-          active: true,
-          onClick: () => {},
-        },
-      ]
+    ? [{ id: activeWindow, title: activeWindow === 'newShow' ? 'New Game Show' : 'My Shows', active: true, onClick: () => {} }]
     : [];
 
   return (
     <div className="min-h-screen bg-background relative pb-7 overflow-hidden">
-      {/* Desktop Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-5"
-        style={{
-          backgroundImage: `repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0,0,0,0.1) 2px,
-            rgba(0,0,0,0.1) 4px
-          )`
-        }}
-      />
+      <div className="absolute inset-0 opacity-5" style={{ backgroundImage: `repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.1) 2px,rgba(0,0,0,0.1) 4px)` }} />
 
-      {/* Desktop Icons */}
       <div className="p-4 grid grid-cols-1 gap-1 content-start h-[calc(100vh-28px)]">
         {desktopIcons.map((icon, index) => (
-          <DesktopIcon
-            key={index}
-            icon={icon.icon}
-            label={icon.label}
-            onDoubleClick={icon.onClick}
-          />
+          <DesktopIcon key={index} icon={icon.icon} label={icon.label} onDoubleClick={icon.onClick} />
         ))}
       </div>
 
-      {/* Windows */}
-      {activeWindow === 'newGame' && (
-        <NewGameWizard
-          onSelectType={handleNewGame}
-          onClose={() => setActiveWindow(null)}
-        />
-      )}
-
-      {activeWindow === 'gridCreator' && (
-        <GridGameCreator
-          game={editingGame?.type === 'grid' ? editingGame as GridGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
-        />
-      )}
-
-      {activeWindow === 'slidesCreator' && (
-        <SlidesGameCreator
-          game={editingGame?.type === 'slides' ? editingGame as SlidesGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
-        />
-      )}
-
-      {activeWindow === 'wheelCreator' && (
-        <WheelGameCreator
-          game={editingGame?.type === 'wheel' ? editingGame as WheelGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
-        />
+      {activeWindow === 'newShow' && (
+        <GameShowWizard onSave={handleSaveGameShow} onClose={() => setActiveWindow(null)} />
       )}
 
       {activeWindow === 'gamesLibrary' && (
         <GamesLibrary
           games={games}
-          onEdit={handleEditGame}
-          onPlay={handlePlayGame}
-          onDelete={handleDeleteGame}
+          onEdit={() => {}}
+          onPlay={(game) => handlePlayShow({ id: 'quick', name: game.name, description: '', games: [game], createdAt: new Date(), updatedAt: new Date() })}
+          onDelete={() => {}}
           onClose={() => setActiveWindow(null)}
         />
       )}
 
-      {/* Dialog */}
+      {activeWindow === 'lobby' && pendingGameShow && (
+        <GameLobby gameShow={pendingGameShow} onClose={() => setActiveWindow(null)} onStartGame={handleStartGame} />
+      )}
+
+      {activeWindow === 'drawing' && currentSession && (
+        <CharacterDrawing
+          playerName={currentSession.players[drawingPlayerIndex]?.name || 'Player'}
+          onComplete={handleDrawingComplete}
+          onClose={() => setActiveWindow('lobby')}
+        />
+      )}
+
+      {activeWindow === 'playing' && <GamePlayScreen onClose={() => setActiveWindow(null)} />}
+
       {dialog.show && (
         <Dialog
           title={dialog.title}
           message={dialog.message}
           type={dialog.type}
           onClose={() => setDialog({ ...dialog, show: false })}
-          buttons={
-            dialog.type === 'question'
-              ? [
-                  { label: 'No', onClick: () => {} },
-                  {
-                    label: 'Yes',
-                    onClick: () => dialog.onConfirm?.(),
-                    primary: true,
-                  },
-                ]
-              : [{ label: 'OK', onClick: () => {}, primary: true }]
-          }
+          buttons={dialog.type === 'question' ? [{ label: 'No', onClick: () => {} }, { label: 'Yes', onClick: () => dialog.onConfirm?.(), primary: true }] : [{ label: 'OK', onClick: () => {}, primary: true }]}
         />
       )}
 
-      {/* Start Menu */}
-      {startMenuOpen && (
-        <StartMenu
-          items={startMenuItems}
-          onClose={() => setStartMenuOpen(false)}
-        />
-      )}
-
-      {/* Taskbar */}
-      <Taskbar
-        items={taskbarItems}
-        onStartClick={() => setStartMenuOpen(!startMenuOpen)}
-        startMenuOpen={startMenuOpen}
-      />
+      {startMenuOpen && <StartMenu items={startMenuItems} onClose={() => setStartMenuOpen(false)} />}
+      <Taskbar items={taskbarItems} onStartClick={() => setStartMenuOpen(!startMenuOpen)} startMenuOpen={startMenuOpen} />
     </div>
   );
 };
