@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { DesktopIcon, Taskbar, StartMenu, Dialog } from '@/components/win95';
 import {
   GridGameCreator,
@@ -6,9 +6,11 @@ import {
   WheelGameCreator,
   GamesLibrary,
   NewGameWizard,
+  GameLobby,
+  GameShowPlayer,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
-import { Game, GridGame, SlidesGame, WheelGame } from '@/types/game';
+import { Game, GameShow, GridGame, SlidesGame, WheelGame } from '@/types/game';
 import { 
   Grid3X3, 
   Presentation, 
@@ -16,15 +18,16 @@ import {
   FolderOpen, 
   FileText,
   HelpCircle,
-  Play
 } from 'lucide-react';
 
 type WindowType = 
-  | 'newGame'
+  | 'newGameWizard'
   | 'gridCreator'
   | 'slidesCreator'
   | 'wheelCreator'
   | 'gamesLibrary'
+  | 'gameLobby'
+  | 'gamePlayer'
   | null;
 
 interface DialogState {
@@ -35,10 +38,16 @@ interface DialogState {
   onConfirm?: () => void;
 }
 
+interface EditorState {
+  type: 'grid' | 'slides' | 'wheel';
+  game: Game | null;
+  onComplete: (game: Game) => void;
+  saveLabel: string;
+}
+
 const Index = () => {
   const [activeWindow, setActiveWindow] = useState<WindowType>(null);
   const [startMenuOpen, setStartMenuOpen] = useState(false);
-  const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [dialog, setDialog] = useState<DialogState>({
     show: false,
     title: '',
@@ -46,11 +55,37 @@ const Index = () => {
     type: 'info',
   });
 
-  const { games, addGame, updateGame, deleteGame, validateGame, validationErrors } = useGameStore();
+  // For wizard flow - editing a game that will be added to the wizard
+  const [editorState, setEditorState] = useState<EditorState | null>(null);
+  
+  // For lobby
+  const [pendingGameShow, setPendingGameShow] = useState<GameShow | null>(null);
 
-  const handleNewGame = (type: 'grid' | 'slides' | 'wheel') => {
-    setActiveWindow(null);
-    setEditingGame(null);
+  const { 
+    games, 
+    gameShows,
+    addGame, 
+    updateGame, 
+    deleteGame, 
+    addGameShow,
+    updateGameShow,
+    validateGame,
+    currentSession,
+    createSession,
+  } = useGameStore();
+
+  // Handle opening a game editor from the wizard
+  const handleEditGameFromWizard = useCallback((
+    type: 'grid' | 'slides' | 'wheel',
+    game: Game | null,
+    onComplete: (game: Game) => void
+  ) => {
+    setEditorState({
+      type,
+      game,
+      onComplete,
+      saveLabel: game ? 'Update' : 'Add',
+    });
     
     switch (type) {
       case 'grid':
@@ -63,9 +98,10 @@ const Index = () => {
         setActiveWindow('wheelCreator');
         break;
     }
-  };
+  }, []);
 
-  const handleSaveGame = (game: Game) => {
+  // Handle saving a game from the editor
+  const handleSaveFromEditor = useCallback((game: Game) => {
     const errors = validateGame(game);
     
     if (errors.length > 0) {
@@ -78,25 +114,93 @@ const Index = () => {
       return;
     }
 
-    if (editingGame) {
-      updateGame(game.id, game);
+    if (editorState) {
+      // Coming from wizard flow - call the completion callback
+      editorState.onComplete(game);
+      setEditorState(null);
+      setActiveWindow('newGameWizard');
     } else {
+      // Direct save (standalone mode or from games library)
       addGame(game);
+      setActiveWindow(null);
+      setDialog({
+        show: true,
+        title: 'Success',
+        message: `Game "${game.name}" has been saved!`,
+        type: 'info',
+      });
+    }
+  }, [editorState, validateGame, addGame]);
+
+  // Handle closing an editor
+  const handleCloseEditor = useCallback(() => {
+    if (editorState) {
+      // Return to wizard without saving
+      setEditorState(null);
+      setActiveWindow('newGameWizard');
+    } else {
+      setActiveWindow(null);
+    }
+  }, [editorState]);
+
+  // Handle saving a game show
+  const handleSaveGameShow = useCallback((show: GameShow) => {
+    const existing = gameShows.find(s => s.id === show.id);
+    if (existing) {
+      updateGameShow(show.id, show);
+    } else {
+      addGameShow(show);
     }
     
     setActiveWindow(null);
-    setEditingGame(null);
-    
     setDialog({
       show: true,
       title: 'Success',
-      message: `Game "${game.name}" has been saved successfully!`,
+      message: `Game Show "${show.name}" has been saved!`,
       type: 'info',
     });
-  };
+  }, [gameShows, addGameShow, updateGameShow]);
 
-  const handleEditGame = (game: Game) => {
-    setEditingGame(game);
+  // Handle playing a game show
+  const handlePlayGameShow = useCallback((show: GameShow) => {
+    setPendingGameShow(show);
+    setActiveWindow('gameLobby');
+  }, []);
+
+  // Handle starting the game from lobby
+  const handleStartGame = useCallback(() => {
+    setActiveWindow('gamePlayer');
+  }, []);
+
+  // Handle playing a single game (wrap it in a show)
+  const handlePlaySingleGame = useCallback((game: Game) => {
+    const tempShow: GameShow = {
+      id: 'temp-' + Date.now(),
+      name: game.name,
+      description: '',
+      games: [game],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    handlePlayGameShow(tempShow);
+  }, [handlePlayGameShow]);
+
+  // Handle editing an existing game from library
+  const handleEditGameFromLibrary = useCallback((game: Game) => {
+    setEditorState({
+      type: game.type,
+      game,
+      onComplete: (updatedGame) => {
+        updateGame(game.id, updatedGame);
+        setDialog({
+          show: true,
+          title: 'Success',
+          message: `Game "${updatedGame.name}" has been updated!`,
+          type: 'info',
+        });
+      },
+      saveLabel: 'Save',
+    });
     
     switch (game.type) {
       case 'grid':
@@ -109,33 +213,24 @@ const Index = () => {
         setActiveWindow('wheelCreator');
         break;
     }
-  };
+  }, [updateGame]);
 
   const handleDeleteGame = (id: string) => {
     const game = games.find(g => g.id === id);
     setDialog({
       show: true,
       title: 'Confirm Delete',
-      message: `Are you sure you want to delete "${game?.name}"? This action cannot be undone.`,
+      message: `Are you sure you want to delete "${game?.name}"?`,
       type: 'question',
       onConfirm: () => deleteGame(id),
-    });
-  };
-
-  const handlePlayGame = (game: Game) => {
-    setDialog({
-      show: true,
-      title: 'Coming Soon!',
-      message: 'Multiplayer game sessions require a backend connection. Enable Lovable Cloud to unlock real-time multiplayer with game codes, lobbies, and character drawing!',
-      type: 'info',
     });
   };
 
   const desktopIcons = [
     {
       icon: <FileText className="w-8 h-8 text-yellow-300" />,
-      label: 'New Game',
-      onClick: () => setActiveWindow('newGame'),
+      label: 'New Game Show',
+      onClick: () => setActiveWindow('newGameWizard'),
     },
     {
       icon: <FolderOpen className="w-8 h-8 text-yellow-400" />,
@@ -143,27 +238,12 @@ const Index = () => {
       onClick: () => setActiveWindow('gamesLibrary'),
     },
     {
-      icon: <Grid3X3 className="w-8 h-8 text-blue-400" />,
-      label: 'Grid Game',
-      onClick: () => handleNewGame('grid'),
-    },
-    {
-      icon: <Presentation className="w-8 h-8 text-green-400" />,
-      label: 'Slides Game',
-      onClick: () => handleNewGame('slides'),
-    },
-    {
-      icon: <CircleDot className="w-8 h-8 text-red-400" />,
-      label: 'Wheel Game',
-      onClick: () => handleNewGame('wheel'),
-    },
-    {
       icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
       label: 'Help',
       onClick: () => setDialog({
         show: true,
         title: 'Game Show Maker Help',
-        message: 'Welcome to Game Show Maker 95!\n\n• Create games using the desktop icons\n• Save your games to access them later\n• Enable multiplayer with Lovable Cloud\n\nDouble-click icons to open!',
+        message: 'Welcome to Game Show Maker 95!\n\n• Create game shows with multiple challenges\n• Add Grid, Slides, or Wheel games\n• Play with test players offline\n\nDouble-click icons to open!',
         type: 'info',
       }),
     },
@@ -173,32 +253,14 @@ const Index = () => {
     {
       id: 'new',
       icon: <FileText className="w-6 h-6" />,
-      label: 'New Game',
-      onClick: () => setActiveWindow('newGame'),
+      label: 'New Game Show',
+      onClick: () => setActiveWindow('newGameWizard'),
     },
     {
       id: 'games',
       icon: <FolderOpen className="w-6 h-6" />,
       label: 'My Games',
       onClick: () => setActiveWindow('gamesLibrary'),
-    },
-    {
-      id: 'grid',
-      icon: <Grid3X3 className="w-6 h-6" />,
-      label: 'Grid Game',
-      onClick: () => handleNewGame('grid'),
-    },
-    {
-      id: 'slides',
-      icon: <Presentation className="w-6 h-6" />,
-      label: 'Slides Game',
-      onClick: () => handleNewGame('slides'),
-    },
-    {
-      id: 'wheel',
-      icon: <CircleDot className="w-6 h-6" />,
-      label: 'Wheel Game',
-      onClick: () => handleNewGame('wheel'),
     },
   ];
 
@@ -207,15 +269,21 @@ const Index = () => {
         {
           id: activeWindow,
           title:
-            activeWindow === 'newGame'
-              ? 'New Game Wizard'
+            activeWindow === 'newGameWizard'
+              ? 'New Game Show'
               : activeWindow === 'gridCreator'
               ? 'Grid Game Creator'
               : activeWindow === 'slidesCreator'
               ? 'Slides Game Creator'
               : activeWindow === 'wheelCreator'
               ? 'Wheel Game Creator'
-              : 'My Games',
+              : activeWindow === 'gamesLibrary'
+              ? 'My Games'
+              : activeWindow === 'gameLobby'
+              ? 'Game Lobby'
+              : activeWindow === 'gamePlayer'
+              ? 'Playing...'
+              : 'Window',
           active: true,
           onClick: () => {},
         },
@@ -251,53 +319,69 @@ const Index = () => {
       </div>
 
       {/* Windows */}
-      {activeWindow === 'newGame' && (
+      {activeWindow === 'newGameWizard' && (
         <NewGameWizard
-          onSelectType={handleNewGame}
+          onEditGame={handleEditGameFromWizard}
+          onSaveShow={handleSaveGameShow}
+          onPlayShow={handlePlayGameShow}
           onClose={() => setActiveWindow(null)}
         />
       )}
 
       {activeWindow === 'gridCreator' && (
         <GridGameCreator
-          game={editingGame?.type === 'grid' ? editingGame as GridGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
+          game={editorState?.type === 'grid' && editorState.game ? editorState.game as GridGame : undefined}
+          onSave={handleSaveFromEditor}
+          onClose={handleCloseEditor}
+          saveLabel={editorState?.saveLabel}
         />
       )}
 
       {activeWindow === 'slidesCreator' && (
         <SlidesGameCreator
-          game={editingGame?.type === 'slides' ? editingGame as SlidesGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
+          game={editorState?.type === 'slides' && editorState.game ? editorState.game as SlidesGame : undefined}
+          onSave={handleSaveFromEditor}
+          onClose={handleCloseEditor}
+          saveLabel={editorState?.saveLabel}
         />
       )}
 
       {activeWindow === 'wheelCreator' && (
         <WheelGameCreator
-          game={editingGame?.type === 'wheel' ? editingGame as WheelGame : undefined}
-          onSave={handleSaveGame}
-          onClose={() => {
-            setActiveWindow(null);
-            setEditingGame(null);
-          }}
+          game={editorState?.type === 'wheel' && editorState.game ? editorState.game as WheelGame : undefined}
+          onSave={handleSaveFromEditor}
+          onClose={handleCloseEditor}
+          saveLabel={editorState?.saveLabel}
         />
       )}
 
       {activeWindow === 'gamesLibrary' && (
         <GamesLibrary
           games={games}
-          onEdit={handleEditGame}
-          onPlay={handlePlayGame}
+          onEdit={handleEditGameFromLibrary}
+          onPlay={handlePlaySingleGame}
           onDelete={handleDeleteGame}
           onClose={() => setActiveWindow(null)}
+        />
+      )}
+
+      {activeWindow === 'gameLobby' && pendingGameShow && (
+        <GameLobby
+          gameShow={pendingGameShow}
+          onClose={() => {
+            setPendingGameShow(null);
+            setActiveWindow(null);
+          }}
+          onStartGame={handleStartGame}
+        />
+      )}
+
+      {activeWindow === 'gamePlayer' && currentSession && (
+        <GameShowPlayer
+          onClose={() => {
+            setPendingGameShow(null);
+            setActiveWindow(null);
+          }}
         />
       )}
 
