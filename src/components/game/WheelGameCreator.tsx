@@ -7,6 +7,7 @@ interface WheelGameCreatorProps {
   game?: WheelGame;
   onSave: (game: WheelGame) => void;
   onClose: () => void;
+  saveLabel?: string;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -34,6 +35,7 @@ export const WheelGameCreator: React.FC<WheelGameCreatorProps> = ({
   game,
   onSave,
   onClose,
+  saveLabel = 'Save',
 }) => {
   const [name, setName] = useState(game?.name || 'My Wheel Game');
   const [segments, setSegments] = useState<WheelSegment[]>(
@@ -217,7 +219,7 @@ export const WheelGameCreator: React.FC<WheelGameCreatorProps> = ({
           <div className="flex-1" />
           
           <div className="flex gap-1">
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave}>{saveLabel}</Button>
             <Button onClick={onClose}>Cancel</Button>
           </div>
         </div>

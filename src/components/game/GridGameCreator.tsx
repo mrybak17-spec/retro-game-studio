@@ -7,6 +7,7 @@ interface GridGameCreatorProps {
   game?: GridGame;
   onSave: (game: GridGame) => void;
   onClose: () => void;
+  saveLabel?: string;
 }
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -30,6 +31,7 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
   game,
   onSave,
   onClose,
+  saveLabel = 'Save',
 }) => {
   const [name, setName] = useState(game?.name || 'My Grid Game');
   const [columns, setColumns] = useState(game?.columns || 5);
@@ -155,7 +157,7 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
           <div className="flex-1" />
           
           <div className="flex gap-1">
-            <Button onClick={handleSave}>Save</Button>
+            <Button onClick={handleSave}>{saveLabel}</Button>
             <Button onClick={onClose}>Cancel</Button>
           </div>
         </div>

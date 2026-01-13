@@ -5,3 +5,4 @@ export { GamesLibrary } from './GamesLibrary';
 export { NewGameWizard } from './NewGameWizard';
 export { GameShowCreator } from './GameShowCreator';
 export { GameLobby } from './GameLobby';
+export { GameShowPlayer } from './GameShowPlayer';
