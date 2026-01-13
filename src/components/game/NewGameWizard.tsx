@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Window, Button, GroupBox, Input } from '@/components/win95';
+import { Window, Button, GroupBox } from '@/components/win95';
 import { Grid3X3, Presentation, CircleDot, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
-import { Game, GameShow } from '@/types/game';
-import { useGameStore } from '@/store/gameStore';
+import { Game } from '@/types/game';
 
 interface NewGameWizardProps {
-  onEditGame: (type: 'grid' | 'slides' | 'wheel', game: Game | null, onComplete: (game: Game) => void) => void;
-  onSaveShow: (show: GameShow) => void;
-  onPlayShow: (show: GameShow) => void;
+  showName: string;
+  games: Game[];
+  onShowNameChange: (name: string) => void;
+  onGamesChange: (games: Game[]) => void;
+  onEditGame: (type: 'grid' | 'slides' | 'wheel', gameIndex: number | null) => void;
+  onSaveShow: () => void;
+  onPlayShow: () => void;
   onClose: () => void;
-  existingShow?: GameShow;
 }
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
 
 const getGameIcon = (type: Game['type']) => {
   switch (type) {
@@ -37,17 +37,17 @@ const getGameTypeName = (type: Game['type']) => {
 };
 
 export const NewGameWizard: React.FC<NewGameWizardProps> = ({
+  showName,
+  games,
+  onShowNameChange,
+  onGamesChange,
   onEditGame,
   onSaveShow,
   onPlayShow,
   onClose,
-  existingShow,
 }) => {
-  const [showName, setShowName] = useState(existingShow?.name || 'My Game Show');
-  const [games, setGames] = useState<Game[]>(existingShow?.games || []);
-  const [selected, setSelected] = useState<'grid' | 'slides' | 'wheel' | null>(null);
+  const [selectedType, setSelectedType] = useState<'grid' | 'slides' | 'wheel' | null>(null);
   const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
-  const { validateGameShow } = useGameStore();
 
   const gameTypes = [
     {
@@ -70,18 +70,9 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
     },
   ];
 
-  const handleAddGame = (game: Game) => {
-    setGames([...games, game]);
-  };
-
-  const handleUpdateGame = (index: number, game: Game) => {
-    const newGames = [...games];
-    newGames[index] = game;
-    setGames(newGames);
-  };
-
   const handleDeleteGame = (index: number) => {
-    setGames(games.filter((_, i) => i !== index));
+    const newGames = games.filter((_, i) => i !== index);
+    onGamesChange(newGames);
     setSelectedGameIndex(null);
   };
 
@@ -91,62 +82,19 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
     
     const newGames = [...games];
     [newGames[index], newGames[newIndex]] = [newGames[newIndex], newGames[index]];
-    setGames(newGames);
+    onGamesChange(newGames);
     setSelectedGameIndex(newIndex);
   };
 
   const handleNext = () => {
-    if (!selected) return;
-    
-    onEditGame(selected, null, (game) => {
-      handleAddGame(game);
-    });
+    if (!selectedType) return;
+    onEditGame(selectedType, null); // null = adding new game
   };
 
   const handleEditSelectedGame = () => {
     if (selectedGameIndex === null) return;
     const game = games[selectedGameIndex];
-    
-    onEditGame(game.type, game, (updatedGame) => {
-      handleUpdateGame(selectedGameIndex, updatedGame);
-    });
-  };
-
-  const handleSave = () => {
-    const show: GameShow = {
-      id: existingShow?.id || generateId(),
-      name: showName,
-      description: '',
-      games,
-      createdAt: existingShow?.createdAt || new Date(),
-      updatedAt: new Date(),
-    };
-
-    const errors = validateGameShow(show);
-    if (errors.length > 0) {
-      alert(`Please fix errors:\n${errors.slice(0, 3).map(e => e.message).join('\n')}`);
-      return;
-    }
-
-    onSaveShow(show);
-  };
-
-  const handlePlay = () => {
-    if (games.length === 0) {
-      alert('Add at least one game to play!');
-      return;
-    }
-
-    const show: GameShow = {
-      id: existingShow?.id || generateId(),
-      name: showName,
-      description: '',
-      games,
-      createdAt: existingShow?.createdAt || new Date(),
-      updatedAt: new Date(),
-    };
-
-    onPlayShow(show);
+    onEditGame(game.type, selectedGameIndex);
   };
 
   return (
@@ -173,12 +121,12 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
               <button
                 key={type.id}
                 className={`win95-raised p-2 flex items-center gap-3 text-left ${
-                  selected === type.id ? 'ring-2 ring-titlebar' : ''
+                  selectedType === type.id ? 'ring-2 ring-titlebar' : ''
                 }`}
-                onClick={() => setSelected(type.id)}
+                onClick={() => setSelectedType(type.id)}
                 onDoubleClick={() => {
-                  setSelected(type.id);
-                  handleNext();
+                  setSelectedType(type.id);
+                  onEditGame(type.id, null);
                 }}
               >
                 <div className="text-titlebar">{type.icon}</div>
@@ -194,14 +142,14 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
 
           <div className="flex gap-1 pt-2 border-t border-window-border-dark">
             <Button onClick={onClose}>Cancel</Button>
-            <Button onClick={handleNext} disabled={!selected}>
+            <Button onClick={handleNext} disabled={!selectedType}>
               Next &gt;
             </Button>
             {games.length > 0 && (
               <>
                 <div className="flex-1" />
-                <Button onClick={handlePlay}>▶ Play</Button>
-                <Button onClick={handleSave}>Save</Button>
+                <Button onClick={onPlayShow}>▶ Play</Button>
+                <Button onClick={onSaveShow}>Save</Button>
               </>
             )}
           </div>
@@ -214,7 +162,7 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
               type="text"
               className="win95-input w-full text-sm"
               value={showName}
-              onChange={(e) => setShowName(e.target.value)}
+              onChange={(e) => onShowNameChange(e.target.value)}
               placeholder="Enter show name..."
             />
           </GroupBox>
@@ -264,14 +212,17 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
               ) : (
                 games.map((game, index) => (
                   <div
-                    key={game.id}
+                    key={game.id + '-' + index}
                     className={`px-2 py-1.5 cursor-pointer text-xs flex items-center gap-2 border-b border-window-border-light ${
                       index === selectedGameIndex
                         ? 'bg-titlebar text-titlebar-foreground'
                         : 'hover:bg-secondary'
                     }`}
                     onClick={() => setSelectedGameIndex(index)}
-                    onDoubleClick={handleEditSelectedGame}
+                    onDoubleClick={() => {
+                      setSelectedGameIndex(index);
+                      onEditGame(game.type, index);
+                    }}
                   >
                     <span className="shrink-0">{getGameIcon(game.type)}</span>
                     <span className="flex-1 truncate">{game.name}</span>
