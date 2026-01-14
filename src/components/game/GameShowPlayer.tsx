@@ -15,7 +15,10 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [selectedSegmentIndex, setSelectedSegmentIndex] = useState<number | null>(null);
-  const [showAnswer, setShowAnswer] = useState(false);
+  const [showAnswerForSlide, setShowAnswerForSlide] = useState<Set<number>>(new Set());
+  const [showGridAnswer, setShowGridAnswer] = useState(false);
+  const [showWheelAnswer, setShowWheelAnswer] = useState(false);
+  const [usedSegments, setUsedSegments] = useState<Set<string>>(new Set());
   const [chatMessages, setChatMessages] = useState<{player: string, message: string}[]>([]);
   const [chatInput, setChatInput] = useState('');
 
@@ -37,32 +40,45 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
     setRevealedCells(new Set());
     setCurrentSlideIndex(0);
     setSelectedSegmentIndex(null);
-    setShowAnswer(false);
+    setShowAnswerForSlide(new Set());
+    setShowGridAnswer(false);
+    setShowWheelAnswer(false);
+    setUsedSegments(new Set());
     advanceToNextGame();
   };
 
   const handleCellClick = (cellId: string) => {
     if (!revealedCells.has(cellId)) {
       setRevealedCells(new Set([...revealedCells, cellId]));
-      setShowAnswer(false);
+      setShowGridAnswer(false);
     }
   };
 
   const handleSpinWheel = () => {
     if (isSpinning) return;
+    
+    const wheelGame = currentGame as WheelGame;
+    const availableSegments = wheelGame.segments.filter(s => !usedSegments.has(s.id));
+    
+    if (availableSegments.length === 0) return;
+    
     setIsSpinning(true);
-    setShowAnswer(false);
+    setShowWheelAnswer(false);
     
     const spins = 3 + Math.random() * 3;
-    const segmentCount = (currentGame as WheelGame).segments.length;
+    const segmentCount = availableSegments.length;
     const segmentAngle = 360 / segmentCount;
-    const randomSegment = Math.floor(Math.random() * segmentCount);
-    const targetRotation = wheelRotation + spins * 360 + (randomSegment * segmentAngle);
+    const randomIndex = Math.floor(Math.random() * segmentCount);
+    const targetRotation = wheelRotation + spins * 360 + (randomIndex * segmentAngle);
     
     setWheelRotation(targetRotation);
     
     setTimeout(() => {
-      setSelectedSegmentIndex(randomSegment);
+      const selectedSegment = availableSegments[randomIndex];
+      // Find the actual index in available segments for display
+      setSelectedSegmentIndex(randomIndex);
+      // Mark segment as used
+      setUsedSegments(new Set([...usedSegments, selectedSegment.id]));
       setIsSpinning(false);
     }, 3000);
   };
@@ -173,12 +189,12 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
             <div className="text-sm mb-2">
               <strong>Question:</strong> {lastCell.question}
             </div>
-            {showAnswer ? (
+            {showGridAnswer ? (
               <div className="text-sm text-green-700">
                 <strong>Answer:</strong> {lastCell.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => setShowGridAnswer(true)}>Reveal Answer</Button>
             )}
           </div>
         )}
@@ -228,18 +244,20 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
           </Button>
         </div>
 
-        {/* Question/Answer */}
+        {/* Question/Answer - per slide */}
         {slide.question && (
           <div className="win95-inset p-3 mt-2">
             <div className="text-sm mb-2">
               <strong>Question:</strong> {slide.question}
             </div>
-            {showAnswer ? (
+            {showAnswerForSlide.has(currentSlideIndex) ? (
               <div className="text-sm text-green-700">
                 <strong>Answer:</strong> {slide.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => setShowAnswerForSlide(new Set([...showAnswerForSlide, currentSlideIndex]))}>
+                Reveal Answer
+              </Button>
             )}
           </div>
         )}
@@ -249,13 +267,18 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
 
   // Render Wheel Game
   const renderWheelGame = (game: WheelGame) => {
-    const { segments } = game;
+    // Filter out used segments
+    const availableSegments = game.segments.filter(s => !usedSegments.has(s.id));
     const size = 280;
     const center = size / 2;
     const radius = 120;
-    const segmentAngle = 360 / segments.length;
+    const segmentAngle = availableSegments.length > 0 ? 360 / availableSegments.length : 360;
 
-    const selectedSegment = selectedSegmentIndex !== null ? segments[selectedSegmentIndex] : null;
+    // Get the last selected segment (before it was removed)
+    const lastUsedSegmentId = Array.from(usedSegments).pop();
+    const selectedSegment = lastUsedSegmentId 
+      ? game.segments.find(s => s.id === lastUsedSegmentId) 
+      : null;
 
     return (
       <div className="flex-1 flex flex-col items-center gap-4">
@@ -268,43 +291,49 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
               transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none',
             }}
           >
-            {segments.map((segment, index) => {
-              const startAngle = index * segmentAngle - 90;
-              const endAngle = startAngle + segmentAngle;
-              const startRad = (startAngle * Math.PI) / 180;
-              const endRad = (endAngle * Math.PI) / 180;
-              const x1 = center + radius * Math.cos(startRad);
-              const y1 = center + radius * Math.sin(startRad);
-              const x2 = center + radius * Math.cos(endRad);
-              const y2 = center + radius * Math.sin(endRad);
-              const largeArc = segmentAngle > 180 ? 1 : 0;
-              const pathD = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+            {availableSegments.length > 0 ? (
+              availableSegments.map((segment, index) => {
+                const startAngle = index * segmentAngle - 90;
+                const endAngle = startAngle + segmentAngle;
+                const startRad = (startAngle * Math.PI) / 180;
+                const endRad = (endAngle * Math.PI) / 180;
+                const x1 = center + radius * Math.cos(startRad);
+                const y1 = center + radius * Math.sin(startRad);
+                const x2 = center + radius * Math.cos(endRad);
+                const y2 = center + radius * Math.sin(endRad);
+                const largeArc = segmentAngle > 180 ? 1 : 0;
+                const pathD = `M ${center} ${center} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
 
-              const textAngle = startAngle + segmentAngle / 2;
-              const textRad = (textAngle * Math.PI) / 180;
-              const textRadius = radius * 0.65;
-              const textX = center + textRadius * Math.cos(textRad);
-              const textY = center + textRadius * Math.sin(textRad);
+                const textAngle = startAngle + segmentAngle / 2;
+                const textRad = (textAngle * Math.PI) / 180;
+                const textRadius = radius * 0.65;
+                const textX = center + textRadius * Math.cos(textRad);
+                const textY = center + textRadius * Math.sin(textRad);
 
-              return (
-                <g key={segment.id}>
-                  <path d={pathD} fill={segment.color} stroke="#fff" strokeWidth={2} />
-                  <text
-                    x={textX}
-                    y={textY}
-                    fill="#fff"
-                    fontSize="11"
-                    fontWeight="bold"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
-                    style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
-                  >
-                    {segment.displayText.slice(0, 10)}
-                  </text>
-                </g>
-              );
-            })}
+                return (
+                  <g key={segment.id}>
+                    <path d={pathD} fill={segment.color} stroke="#fff" strokeWidth={2} />
+                    <text
+                      x={textX}
+                      y={textY}
+                      fill="#fff"
+                      fontSize="11"
+                      fontWeight="bold"
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                      transform={`rotate(${textAngle + 90}, ${textX}, ${textY})`}
+                      style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
+                    >
+                      {segment.displayText.slice(0, 10)}
+                    </text>
+                  </g>
+                );
+              })
+            ) : (
+              <text x={center} y={center} textAnchor="middle" fill="#333" fontSize="14">
+                All done!
+              </text>
+            )}
             <circle cx={center} cy={center} r={25} fill="#333" stroke="#fff" strokeWidth={2} />
           </svg>
           {/* Pointer */}
@@ -318,10 +347,14 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
           />
         </div>
 
-        <Button onClick={handleSpinWheel} disabled={isSpinning}>
+        <Button onClick={handleSpinWheel} disabled={isSpinning || availableSegments.length === 0}>
           <RotateCcw className="w-4 h-4 mr-1" />
-          {isSpinning ? 'Spinning...' : 'Spin the Wheel!'}
+          {isSpinning ? 'Spinning...' : availableSegments.length === 0 ? 'All segments used!' : 'Spin the Wheel!'}
         </Button>
+
+        <div className="text-xs text-muted-foreground">
+          {availableSegments.length} / {game.segments.length} segments remaining
+        </div>
 
         {selectedSegment && !isSpinning && (
           <div className="win95-inset p-3 w-full max-w-md">
@@ -331,12 +364,12 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
             <div className="text-sm mb-2">
               <strong>Question:</strong> {selectedSegment.question}
             </div>
-            {showAnswer ? (
+            {showWheelAnswer ? (
               <div className="text-sm text-green-700">
                 <strong>Answer:</strong> {selectedSegment.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => setShowWheelAnswer(true)}>Reveal Answer</Button>
             )}
           </div>
         )}

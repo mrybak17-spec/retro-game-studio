@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { DesktopIcon, Taskbar, StartMenu, Dialog } from '@/components/win95';
 import {
   GridGameCreator,
@@ -8,6 +8,7 @@ import {
   NewGameWizard,
   GameLobby,
   GameShowPlayer,
+  CharacterDrawing,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame } from '@/types/game';
@@ -24,6 +25,7 @@ type WindowType =
   | 'wheelCreator'
   | 'gamesLibrary'
   | 'gameLobby'
+  | 'characterDrawing'
   | 'gamePlayer'
   | null;
 
@@ -252,9 +254,16 @@ const Index = () => {
     setActiveWindow('gameLobby');
   }, [wizardState]);
 
-  // Handle starting the game from lobby
+  // Handle starting the game from lobby - go to drawing phase first
   const handleStartGame = useCallback(() => {
-    setActiveWindow('gamePlayer');
+    // Update session status to drawing
+    const { currentSession } = useGameStore.getState();
+    if (currentSession) {
+      useGameStore.setState({
+        currentSession: { ...currentSession, status: 'drawing' },
+      });
+    }
+    setActiveWindow('characterDrawing');
   }, []);
 
   // Handle playing a single game (wrap it in a show)
@@ -298,6 +307,22 @@ const Index = () => {
       type: 'question',
       onConfirm: () => deleteGame(id),
     });
+  };
+
+  const handleDeleteGameShow = (id: string) => {
+    const show = gameShows.find(s => s.id === id);
+    setDialog({
+      show: true,
+      title: 'Confirm Delete',
+      message: `Are you sure you want to delete "${show?.name}"?`,
+      type: 'question',
+      onConfirm: () => useGameStore.getState().deleteGameShow(id),
+    });
+  };
+
+  const handlePlayGameShow = (show: GameShow) => {
+    setPendingGameShow(show);
+    setActiveWindow('gameLobby');
   };
 
   // Get current game being edited (for editors)
@@ -382,6 +407,8 @@ const Index = () => {
               ? 'My Games'
               : activeWindow === 'gameLobby'
               ? 'Game Lobby'
+              : activeWindow === 'characterDrawing'
+              ? 'Draw Your Character'
               : activeWindow === 'gamePlayer'
               ? 'Playing...'
               : 'Window',
@@ -468,9 +495,12 @@ const Index = () => {
       {activeWindow === 'gamesLibrary' && (
         <GamesLibrary
           games={games}
+          gameShows={gameShows}
           onEdit={handleEditGameFromLibrary}
           onPlay={handlePlaySingleGame}
+          onPlayShow={handlePlayGameShow}
           onDelete={handleDeleteGame}
+          onDeleteShow={handleDeleteGameShow}
           onClose={() => setActiveWindow(null)}
         />
       )}
@@ -483,6 +513,17 @@ const Index = () => {
             setActiveWindow(null);
           }}
           onStartGame={handleStartGame}
+        />
+      )}
+
+      {activeWindow === 'characterDrawing' && currentSession && (
+        <CharacterDrawing
+          onComplete={() => setActiveWindow('gamePlayer')}
+          onClose={() => {
+            setPendingGameShow(null);
+            useGameStore.getState().endSession();
+            setActiveWindow(null);
+          }}
         />
       )}
 
