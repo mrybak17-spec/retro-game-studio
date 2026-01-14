@@ -69,16 +69,26 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
     const segmentCount = availableSegments.length;
     const segmentAngle = 360 / segmentCount;
     const randomIndex = Math.floor(Math.random() * segmentCount);
-    const targetRotation = wheelRotation + spins * 360 + (randomIndex * segmentAngle);
+    
+    // The pointer is at the top (12 o'clock position)
+    // Segments start at -90deg (also 12 o'clock), so segment 0 is at top
+    // To land on segment N, we need to rotate so that segment N is at the top
+    // Each segment spans from (index * segmentAngle) to ((index + 1) * segmentAngle)
+    // We want the middle of the segment to be at the pointer
+    const segmentMiddle = randomIndex * segmentAngle + segmentAngle / 2;
+    // We need to rotate the wheel so this segment's middle is at top (0 degrees from pointer's perspective)
+    // Since wheel rotates clockwise, we subtract from 360 to get the correct position
+    const targetRotation = wheelRotation + spins * 360 + (360 - segmentMiddle);
+    
+    // Store which segment we're targeting BEFORE the spin
+    const targetSegment = availableSegments[randomIndex];
     
     setWheelRotation(targetRotation);
     
     setTimeout(() => {
-      const selectedSegment = availableSegments[randomIndex];
-      // Find the actual index in available segments for display
       setSelectedSegmentIndex(randomIndex);
       // Mark segment as used
-      setUsedSegments(new Set([...usedSegments, selectedSegment.id]));
+      setUsedSegments(new Set([...usedSegments, targetSegment.id]));
       setIsSpinning(false);
     }, 3000);
   };
