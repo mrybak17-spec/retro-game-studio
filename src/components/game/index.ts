@@ -6,3 +6,4 @@ export { NewGameWizard } from './NewGameWizard';
 export { GameShowCreator } from './GameShowCreator';
 export { GameLobby } from './GameLobby';
 export { GameShowPlayer } from './GameShowPlayer';
+export { CharacterDrawing } from './CharacterDrawing';
