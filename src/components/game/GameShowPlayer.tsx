@@ -56,39 +56,35 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
 
   const handleSpinWheel = () => {
     if (isSpinning) return;
-    
+
     const wheelGame = currentGame as WheelGame;
-    const availableSegments = wheelGame.segments.filter(s => !usedSegments.has(s.id));
-    
+    const availableSegments = wheelGame.segments.filter((s) => !usedSegments.has(s.id));
+
     if (availableSegments.length === 0) return;
-    
+
     setIsSpinning(true);
     setShowWheelAnswer(false);
-    
-    const spins = 3 + Math.random() * 3;
+
+    // Use whole turns to guarantee the wheel stops exactly on the chosen segment.
+    const extraTurns = 3 + Math.floor(Math.random() * 3); // 3..5
     const segmentCount = availableSegments.length;
     const segmentAngle = 360 / segmentCount;
     const randomIndex = Math.floor(Math.random() * segmentCount);
-    
-    // The pointer is at the top (12 o'clock position)
-    // Segments start at -90deg (also 12 o'clock), so segment 0 is at top
-    // To land on segment N, we need to rotate so that segment N is at the top
-    // Each segment spans from (index * segmentAngle) to ((index + 1) * segmentAngle)
-    // We want the middle of the segment to be at the pointer
-    const segmentMiddle = randomIndex * segmentAngle + segmentAngle / 2;
-    // We need to rotate the wheel so this segment's middle is at top (0 degrees from pointer's perspective)
-    // Since wheel rotates clockwise, we subtract from 360 to get the correct position
-    const targetRotation = wheelRotation + spins * 360 + (360 - segmentMiddle);
-    
-    // Store which segment we're targeting BEFORE the spin
+
+    // Segment 0 starts at -90deg (12 o'clock). The pointer is also at 12 o'clock.
+    // We want the *middle* of the chosen segment to land under the pointer.
+    const desiredRotationMod = (360 - (randomIndex + 0.5) * segmentAngle + 360) % 360;
+    const currentRotationMod = ((wheelRotation % 360) + 360) % 360;
+    const delta = (desiredRotationMod - currentRotationMod + 360) % 360;
+
+    const targetRotation = wheelRotation + extraTurns * 360 + delta;
     const targetSegment = availableSegments[randomIndex];
-    
+
     setWheelRotation(targetRotation);
-    
+
     setTimeout(() => {
       setSelectedSegmentIndex(randomIndex);
-      // Mark segment as used
-      setUsedSegments(new Set([...usedSegments, targetSegment.id]));
+      setUsedSegments((prev) => new Set([...prev, targetSegment.id]));
       setIsSpinning(false);
     }, 3000);
   };
