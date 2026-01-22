@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Window, Button, GroupBox, Input, Select } from '@/components/win95';
 import { GridGame, GridCell } from '@/types/game';
-import { X } from 'lucide-react';
+import { X, Image, Music, Trash2 } from 'lucide-react';
 
 interface GridGameCreatorProps {
   game?: GridGame;
@@ -218,10 +218,10 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
         </div>
 
         {/* Right Panel - Cell Editor */}
-        <div className="w-56">
+        <div className="w-64">
           <GroupBox label="Cell Editor">
             {selectedCell && currentCell ? (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 max-h-[450px] overflow-y-auto pr-1">
                 <Input
                   label="Display Text"
                   value={currentCell.displayText}
@@ -232,9 +232,9 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
                   }
                 />
                 <div className="flex flex-col gap-0.5">
-                  <label className="text-xs">Question</label>
+                  <label className="text-xs">Question (text)</label>
                   <textarea
-                    className="win95-input h-16 resize-none"
+                    className="win95-input h-12 resize-none"
                     value={currentCell.question}
                     onChange={(e) =>
                       handleCellUpdate(selectedCell.row, selectedCell.col, {
@@ -244,10 +244,106 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
                     placeholder="Enter the question..."
                   />
                 </div>
+
+                {/* Image Upload */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs flex items-center gap-1">
+                    <Image size={12} /> Question Image (optional)
+                  </label>
+                  {currentCell.imageUrl ? (
+                    <div className="relative">
+                      <img
+                        src={currentCell.imageUrl}
+                        alt="Question"
+                        className="w-full h-16 object-cover win95-input"
+                      />
+                      <button
+                        className="absolute top-0.5 right-0.5 p-0.5 bg-red-500 text-white rounded"
+                        onClick={() =>
+                          handleCellUpdate(selectedCell.row, selectedCell.col, {
+                            imageUrl: undefined,
+                          })
+                        }
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="win95-button text-xs text-center cursor-pointer flex items-center justify-center gap-1 py-1">
+                      <Image size={12} /> Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              handleCellUpdate(selectedCell.row, selectedCell.col, {
+                                imageUrl: reader.result as string,
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Audio Upload */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs flex items-center gap-1">
+                    <Music size={12} /> Question Audio (optional)
+                  </label>
+                  {currentCell.audioUrl ? (
+                    <div className="flex items-center gap-1">
+                      <audio
+                        src={currentCell.audioUrl}
+                        controls
+                        className="h-8 flex-1"
+                        style={{ maxWidth: '150px' }}
+                      />
+                      <button
+                        className="p-1 bg-red-500 text-white rounded"
+                        onClick={() =>
+                          handleCellUpdate(selectedCell.row, selectedCell.col, {
+                            audioUrl: undefined,
+                          })
+                        }
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="win95-button text-xs text-center cursor-pointer flex items-center justify-center gap-1 py-1">
+                      <Music size={12} /> Upload Audio
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              handleCellUpdate(selectedCell.row, selectedCell.col, {
+                                audioUrl: reader.result as string,
+                              });
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
                 <div className="flex flex-col gap-0.5">
                   <label className="text-xs">Answer</label>
                   <textarea
-                    className="win95-input h-16 resize-none"
+                    className="win95-input h-12 resize-none"
                     value={currentCell.answer}
                     onChange={(e) =>
                       handleCellUpdate(selectedCell.row, selectedCell.col, {

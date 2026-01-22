@@ -5,6 +5,8 @@ export interface GridCell {
   displayText: string;
   points?: number;
   revealed?: boolean;
+  imageUrl?: string;
+  audioUrl?: string;
 }
 
 export interface GridGame {
