@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GridGame, SlidesGame, WheelGame, Player } from '@/types/game';
-import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle } from 'lucide-react';
+import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle, Volume2 } from 'lucide-react';
 
 interface GameShowPlayerProps {
   onClose: () => void;
@@ -192,9 +192,29 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
         {/* Question Display */}
         {lastCell && (
           <div className="win95-inset p-3 mt-2">
-            <div className="text-sm mb-2">
-              <strong>Question:</strong> {lastCell.question}
-            </div>
+            {/* Image */}
+            {lastCell.imageUrl && (
+              <div className="mb-2">
+                <img
+                  src={lastCell.imageUrl}
+                  alt="Question"
+                  className="max-w-full max-h-32 object-contain mx-auto border border-window-border-dark"
+                />
+              </div>
+            )}
+            {/* Audio */}
+            {lastCell.audioUrl && (
+              <div className="mb-2 flex items-center gap-2">
+                <Volume2 className="w-4 h-4" />
+                <audio src={lastCell.audioUrl} controls className="h-8 flex-1" />
+              </div>
+            )}
+            {/* Text Question */}
+            {lastCell.question && (
+              <div className="text-sm mb-2">
+                <strong>Question:</strong> {lastCell.question}
+              </div>
+            )}
             {showGridAnswer ? (
               <div className="text-sm text-green-700">
                 <strong>Answer:</strong> {lastCell.answer}
