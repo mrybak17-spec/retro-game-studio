@@ -80,7 +80,14 @@ const Index = () => {
     validateGame,
     validateGameShow,
     currentSession,
+    loadGameShowsFromCloud,
+    deleteGameShow,
   } = useGameStore();
+
+  // Load game shows from cloud on mount
+  useEffect(() => {
+    loadGameShowsFromCloud();
+  }, [loadGameShowsFromCloud]);
 
   // Reset wizard state
   const resetWizardState = () => {
