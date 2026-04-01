@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame, ValidationError, Player, GameSession } from '@/types/game';
+import { saveGameShowToDb, loadGameShowsFromDb, deleteGameShowFromDb } from '@/lib/supabaseGameService';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateGameCode = () => Math.random().toString(36).substr(2, 6).toUpperCase();
