@@ -159,6 +159,7 @@ export const useGameStore = create<GameStore>()(
         set((state) => ({ gameShows: [...state.gameShows, show], isSaving: true }));
         saveGameShowToDb(show)
           .then((saved) => {
+            console.log('Game show saved to cloud:', saved.id);
             set((state) => ({
               gameShows: state.gameShows.map(s => s.id === show.id ? saved : s),
               isSaving: false,
@@ -166,6 +167,7 @@ export const useGameStore = create<GameStore>()(
           })
           .catch((err) => {
             console.error('Failed to save game show:', err);
+            alert('Failed to save game show: ' + (err?.message || 'Unknown error'));
             set({ isSaving: false });
           });
       },
