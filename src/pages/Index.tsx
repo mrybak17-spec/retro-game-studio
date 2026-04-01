@@ -249,7 +249,7 @@ const Index = () => {
     }
 
     const show: GameShow = {
-      id: 'temp-' + Date.now(),
+      id: crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
