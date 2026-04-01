@@ -136,6 +136,7 @@ export const useGameStore = create<GameStore>()(
       gameShows: [],
       currentSession: null,
       validationErrors: [],
+      isSaving: false,
       
       // Game CRUD
       addGame: (game) =>
