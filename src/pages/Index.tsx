@@ -206,7 +206,7 @@ const Index = () => {
   // Handle saving a game show
   const handleSaveGameShow = useCallback(() => {
     const show: GameShow = {
-      id: 'show-' + Date.now(),
+      id: crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
