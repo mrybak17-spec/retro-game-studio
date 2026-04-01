@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame, ValidationError, Player, GameSession } from '@/types/game';
+import { saveGameShowToDb, loadGameShowsFromDb, deleteGameShowFromDb } from '@/lib/supabaseGameService';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 const generateGameCode = () => Math.random().toString(36).substr(2, 6).toUpperCase();
@@ -20,6 +21,8 @@ interface GameStore {
   addGameShow: (show: GameShow) => void;
   updateGameShow: (id: string, show: Partial<GameShow>) => void;
   deleteGameShow: (id: string) => void;
+  loadGameShowsFromCloud: () => Promise<void>;
+  isSaving: boolean;
   addGameToShow: (showId: string, game: Game) => void;
   removeGameFromShow: (showId: string, gameIndex: number) => void;
   reorderGamesInShow: (showId: string, fromIndex: number, toIndex: number) => void;
@@ -133,6 +136,7 @@ export const useGameStore = create<GameStore>()(
       gameShows: [],
       currentSession: null,
       validationErrors: [],
+      isSaving: false,
       
       // Game CRUD
       addGame: (game) =>
@@ -150,21 +154,49 @@ export const useGameStore = create<GameStore>()(
           games: state.games.filter((g) => g.id !== id),
         })),
       
-      // Game Show CRUD
-      addGameShow: (show) =>
-        set((state) => ({ gameShows: [...state.gameShows, show] })),
+      // Game Show CRUD (persisted to Supabase)
+      addGameShow: (show) => {
+        set((state) => ({ gameShows: [...state.gameShows, show], isSaving: true }));
+        saveGameShowToDb(show)
+          .then((saved) => {
+            set((state) => ({
+              gameShows: state.gameShows.map(s => s.id === show.id ? saved : s),
+              isSaving: false,
+            }));
+          })
+          .catch((err) => {
+            console.error('Failed to save game show:', err);
+            set({ isSaving: false });
+          });
+      },
       
-      updateGameShow: (id, updatedShow) =>
+      updateGameShow: (id, updatedShow) => {
         set((state) => ({
           gameShows: state.gameShows.map((s) =>
             s.id === id ? ({ ...s, ...updatedShow, updatedAt: new Date() } as GameShow) : s
           ),
-        })),
+        }));
+        const updated = get().gameShows.find(s => s.id === id);
+        if (updated) {
+          saveGameShowToDb(updated).catch(err => console.error('Failed to update game show:', err));
+        }
+      },
       
-      deleteGameShow: (id) =>
+      deleteGameShow: (id) => {
         set((state) => ({
           gameShows: state.gameShows.filter((s) => s.id !== id),
-        })),
+        }));
+        deleteGameShowFromDb(id).catch(err => console.error('Failed to delete game show:', err));
+      },
+
+      loadGameShowsFromCloud: async () => {
+        try {
+          const shows = await loadGameShowsFromDb();
+          set({ gameShows: shows });
+        } catch (err) {
+          console.error('Failed to load game shows from cloud:', err);
+        }
+      },
       
       addGameToShow: (showId, game) =>
         set((state) => ({

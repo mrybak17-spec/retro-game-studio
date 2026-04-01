@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { DesktopIcon, Taskbar, StartMenu, Dialog } from '@/components/win95';
 import {
   GridGameCreator,
@@ -80,7 +80,14 @@ const Index = () => {
     validateGame,
     validateGameShow,
     currentSession,
+    loadGameShowsFromCloud,
+    deleteGameShow,
   } = useGameStore();
+
+  // Load game shows from cloud on mount
+  useEffect(() => {
+    loadGameShowsFromCloud();
+  }, [loadGameShowsFromCloud]);
 
   // Reset wizard state
   const resetWizardState = () => {
