@@ -276,7 +276,7 @@ const Index = () => {
   // Handle playing a single game (wrap it in a show)
   const handlePlaySingleGame = useCallback((game: Game) => {
     const tempShow: GameShow = {
-      id: 'temp-' + Date.now(),
+      id: crypto.randomUUID(),
       name: game.name,
       description: '',
       games: [game],
