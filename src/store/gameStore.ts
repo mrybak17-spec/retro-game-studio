@@ -21,6 +21,8 @@ interface GameStore {
   addGameShow: (show: GameShow) => void;
   updateGameShow: (id: string, show: Partial<GameShow>) => void;
   deleteGameShow: (id: string) => void;
+  loadGameShowsFromCloud: () => Promise<void>;
+  isSaving: boolean;
   addGameToShow: (showId: string, game: Game) => void;
   removeGameFromShow: (showId: string, gameIndex: number) => void;
   reorderGamesInShow: (showId: string, fromIndex: number, toIndex: number) => void;
