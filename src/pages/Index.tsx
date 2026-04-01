@@ -206,7 +206,7 @@ const Index = () => {
   // Handle saving a game show
   const handleSaveGameShow = useCallback(() => {
     const show: GameShow = {
-      id: 'show-' + Date.now(),
+      id: crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
@@ -249,7 +249,7 @@ const Index = () => {
     }
 
     const show: GameShow = {
-      id: 'temp-' + Date.now(),
+      id: crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
@@ -276,7 +276,7 @@ const Index = () => {
   // Handle playing a single game (wrap it in a show)
   const handlePlaySingleGame = useCallback((game: Game) => {
     const tempShow: GameShow = {
-      id: 'temp-' + Date.now(),
+      id: crypto.randomUUID(),
       name: game.name,
       description: '',
       games: [game],
