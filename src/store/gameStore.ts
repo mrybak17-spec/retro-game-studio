@@ -366,6 +366,9 @@ export const useGameStore = create<GameStore>()(
           case 'wheel':
             errors = validateWheelGame(game as WheelGame);
             break;
+          case 'board':
+            errors = validateBoardGame(game as BoardGame);
+            break;
         }
         
         set({ validationErrors: errors });
