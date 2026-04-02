@@ -97,6 +97,7 @@ const Index = () => {
       games: [],
       editingIndex: null,
     });
+    setEditingShowId(null);
   };
 
   // Handle opening a game editor from the wizard
