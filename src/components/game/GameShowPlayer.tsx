@@ -52,6 +52,10 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
     setShowGridAnswer(false);
     setShowWheelAnswer(false);
     setUsedSegments(new Set());
+    setBoardPhase('phase1');
+    setBoardCells(null);
+    setRevealedBoardCell(null);
+    setShowBoardAnswer(false);
     advanceToNextGame();
   };
 
