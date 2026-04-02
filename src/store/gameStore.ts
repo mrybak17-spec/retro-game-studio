@@ -129,6 +129,26 @@ const validateWheelGame = (game: WheelGame): ValidationError[] => {
   return errors;
 };
 
+const validateBoardGame = (game: BoardGame): ValidationError[] => {
+  const errors: ValidationError[] = [];
+  if (!game.name.trim()) {
+    errors.push({ field: 'name', message: 'Game name is required', gameId: game.id });
+  }
+  for (let row = 0; row < game.rows; row++) {
+    for (let col = 0; col < game.columns; col++) {
+      const cell = game.cells[row]?.[col];
+      if (!cell) continue;
+      if (!cell.question.trim()) {
+        errors.push({ field: `cell-${row}-${col}-question`, message: `Question missing in Row ${row + 1}, Col ${col + 1}`, gameId: game.id });
+      }
+      if (!cell.answer.trim()) {
+        errors.push({ field: `cell-${row}-${col}-answer`, message: `Answer missing in Row ${row + 1}, Col ${col + 1}`, gameId: game.id });
+      }
+    }
+  }
+  return errors;
+};
+
 export const useGameStore = create<GameStore>()(
   persist(
     (set, get) => ({
