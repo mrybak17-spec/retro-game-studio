@@ -411,7 +411,234 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
     );
   };
 
-  // Render current game based on type
+  // Render Board Game
+  const renderBoardGame = (game: BoardGame) => {
+    // Initialize board cells from game data on first render
+    const cells = boardCells || game.cells;
+    if (!boardCells) {
+      setBoardCells(game.cells.map(row => row.map(c => ({ ...c }))));
+    }
+
+    const activeCells = boardCells || cells;
+
+    if (boardPhase === 'phase1') {
+      // Phase 1: Admin arranges cards, assigns colors & points
+      const allColored = activeCells.flat().every(c => c.teamColor);
+      const allPointed = activeCells.flat().every(c => c.points && c.points > 0);
+      const canEndPhase1 = allColored && allPointed;
+
+      return (
+        <div className="flex-1 flex gap-2">
+          {/* Admin tools sidebar */}
+          <div className="w-36 flex flex-col gap-2 shrink-0">
+            <GroupBox label="Team Colors">
+              <div className="flex flex-col gap-2">
+                <div
+                  className="win95-raised p-2 text-xs text-center cursor-grab font-bold"
+                  style={{ backgroundColor: game.teamColor1, color: '#fff' }}
+                  draggable
+                  onDragStart={(e) => {
+                    setDragItem({ type: 'color', value: game.teamColor1 });
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                >
+                  Team 1
+                </div>
+                <div
+                  className="win95-raised p-2 text-xs text-center cursor-grab font-bold"
+                  style={{ backgroundColor: game.teamColor2, color: '#fff' }}
+                  draggable
+                  onDragStart={(e) => {
+                    setDragItem({ type: 'color', value: game.teamColor2 });
+                    e.dataTransfer.effectAllowed = 'copy';
+                  }}
+                >
+                  Team 2
+                </div>
+              </div>
+            </GroupBox>
+
+            <GroupBox label="Points">
+              <div className="flex flex-col gap-1">
+                {game.pointValues.map(val => (
+                  <div
+                    key={val}
+                    className="win95-raised p-1.5 text-xs text-center cursor-grab font-bold"
+                    draggable
+                    onDragStart={(e) => {
+                      setDragItem({ type: 'points', value: val });
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                  >
+                    {val} pts
+                  </div>
+                ))}
+              </div>
+            </GroupBox>
+
+            <div className="flex-1" />
+            <Button
+              onClick={() => setBoardPhase('phase2')}
+              disabled={!canEndPhase1}
+            >
+              End Phase 1
+            </Button>
+            {!canEndPhase1 && (
+              <p className="text-xs text-muted-foreground">
+                Assign colors and points to all cards first.
+              </p>
+            )}
+          </div>
+
+          {/* Board grid */}
+          <div className="flex-1 flex flex-col">
+            <div className="text-xs font-bold mb-1">Phase 1: Arrange cards, assign colors & points</div>
+            <div
+              className="grid gap-1 flex-1"
+              style={{ gridTemplateColumns: `80px repeat(${game.columns}, 1fr)` }}
+            >
+              {Array.from({ length: game.rows }).map((_, rowIdx) => (
+                <React.Fragment key={rowIdx}>
+                  <div className="win95-raised text-xs font-bold flex items-center justify-center p-1">
+                    {game.rowNames[rowIdx] || `Row ${rowIdx + 1}`}
+                  </div>
+                  {Array.from({ length: game.columns }).map((_, colIdx) => {
+                    const cell = activeCells[rowIdx]?.[colIdx];
+                    if (!cell) return null;
+                    return (
+                      <div
+                        key={`${rowIdx}-${colIdx}`}
+                        className="win95-raised text-xs font-bold flex flex-col items-center justify-center p-1 cursor-pointer relative"
+                        style={{
+                          backgroundColor: cell.teamColor || '#c6c6c6',
+                          color: cell.teamColor ? '#fff' : '#333',
+                          minHeight: '50px',
+                        }}
+                        draggable
+                        onDragStart={(e) => {
+                          setDragSourceCell({ row: rowIdx, col: colIdx });
+                          setDragItem(null);
+                          e.dataTransfer.effectAllowed = 'move';
+                        }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (!boardCells) return;
+                          const newCells = boardCells.map(r => r.map(c => ({ ...c })));
+
+                          if (dragItem) {
+                            // Dropping color or points from sidebar
+                            if (dragItem.type === 'color') {
+                              newCells[rowIdx][colIdx].teamColor = dragItem.value as string;
+                            } else {
+                              newCells[rowIdx][colIdx].points = dragItem.value as number;
+                            }
+                          } else if (dragSourceCell) {
+                            // Swapping two cards
+                            const src = dragSourceCell;
+                            const temp = { ...newCells[rowIdx][colIdx] };
+                            newCells[rowIdx][colIdx] = { ...newCells[src.row][src.col] };
+                            newCells[src.row][src.col] = temp;
+                          }
+
+                          setBoardCells(newCells);
+                          setDragItem(null);
+                          setDragSourceCell(null);
+                        }}
+                      >
+                        <span>{cell.displayText}</span>
+                        {cell.points && cell.points > 0 && (
+                          <span className="text-xs opacity-80 mt-0.5">{cell.points} pts</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Phase 2: Standard Q&A like grid
+    const lastRevealedCell = revealedBoardCell
+      ? activeCells.flat().find(c => c.id === revealedBoardCell)
+      : null;
+
+    return (
+      <div className="flex-1 flex flex-col gap-2">
+        <div className="text-xs font-bold mb-1">Phase 2: Click cards to reveal questions</div>
+        <div
+          className="grid gap-1 flex-1"
+          style={{ gridTemplateColumns: `80px repeat(${game.columns}, 1fr)` }}
+        >
+          {Array.from({ length: game.rows }).map((_, rowIdx) => (
+            <React.Fragment key={rowIdx}>
+              <div className="win95-raised text-xs font-bold flex items-center justify-center p-1">
+                {game.rowNames[rowIdx] || `Row ${rowIdx + 1}`}
+              </div>
+              {Array.from({ length: game.columns }).map((_, colIdx) => {
+                const cell = activeCells[rowIdx]?.[colIdx];
+                if (!cell) return null;
+                const isRevealed = revealedCells.has(cell.id);
+                return (
+                  <button
+                    key={`${rowIdx}-${colIdx}`}
+                    className="win95-raised text-sm font-bold flex flex-col items-center justify-center transition-all"
+                    style={{
+                      backgroundColor: isRevealed ? '#666' : (cell.teamColor || '#c6c6c6'),
+                      color: isRevealed ? '#999' : '#fff',
+                      minHeight: '50px',
+                    }}
+                    onClick={() => {
+                      if (!isRevealed) {
+                        setRevealedCells(new Set([...revealedCells, cell.id]));
+                        setRevealedBoardCell(cell.id);
+                        setShowBoardAnswer(false);
+                      }
+                    }}
+                    disabled={isRevealed}
+                  >
+                    {isRevealed ? '✓' : cell.displayText}
+                    {!isRevealed && cell.points && cell.points > 0 && (
+                      <span className="text-xs opacity-80">{cell.points} pts</span>
+                    )}
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Question Display */}
+        {lastRevealedCell && (
+          <div className="win95-inset p-3 mt-2">
+            {lastRevealedCell.imageUrl && (
+              <div className="mb-2">
+                <img src={lastRevealedCell.imageUrl} alt="Question" className="max-w-full max-h-32 object-contain mx-auto border border-window-border-dark" />
+              </div>
+            )}
+            {lastRevealedCell.audioUrl && (
+              <div className="mb-2 flex items-center gap-2">
+                <Volume2 className="w-4 h-4" />
+                <audio src={lastRevealedCell.audioUrl} controls className="h-8 flex-1" />
+              </div>
+            )}
+            {lastRevealedCell.question && (
+              <div className="text-sm mb-2"><strong>Question:</strong> {lastRevealedCell.question}</div>
+            )}
+            {showBoardAnswer ? (
+              <div className="text-sm text-green-700"><strong>Answer:</strong> {lastRevealedCell.answer}</div>
+            ) : (
+              <Button onClick={() => setShowBoardAnswer(true)}>Reveal Answer</Button>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderCurrentGame = () => {
     if (currentSession.status === 'ended') {
       return (
