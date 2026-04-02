@@ -104,8 +104,8 @@ const Index = () => {
 
   // Handle opening a game editor from the wizard
   const handleEditGameFromWizard = useCallback((
-    type: 'grid' | 'slides' | 'wheel',
-    gameIndex: number | null // null = new game, number = edit existing
+    type: 'grid' | 'slides' | 'wheel' | 'board',
+    gameIndex: number | null
   ) => {
     setWizardState(prev => ({ ...prev, editingIndex: gameIndex }));
     setIsWizardFlow(true);
@@ -119,6 +119,9 @@ const Index = () => {
         break;
       case 'wheel':
         setActiveWindow('wheelCreator');
+        break;
+      case 'board':
+        setActiveWindow('boardCreator');
         break;
     }
   }, []);
