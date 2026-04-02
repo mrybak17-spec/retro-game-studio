@@ -21,6 +21,14 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const [usedSegments, setUsedSegments] = useState<Set<string>>(new Set());
   const [chatMessages, setChatMessages] = useState<{player: string, message: string}[]>([]);
   const [chatInput, setChatInput] = useState('');
+  
+  // Board game state
+  const [boardPhase, setBoardPhase] = useState<'phase1' | 'phase2'>('phase1');
+  const [boardCells, setBoardCells] = useState<BoardCell[][] | null>(null);
+  const [dragItem, setDragItem] = useState<{ type: 'color' | 'points'; value: string | number } | null>(null);
+  const [dragSourceCell, setDragSourceCell] = useState<{ row: number; col: number } | null>(null);
+  const [showBoardAnswer, setShowBoardAnswer] = useState(false);
+  const [revealedBoardCell, setRevealedBoardCell] = useState<string | null>(null);
 
   if (!currentSession) {
     return null;
