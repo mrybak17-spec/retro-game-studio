@@ -22,6 +22,8 @@ const getGameIcon = (type: Game['type']) => {
       return <Presentation className="w-4 h-4" />;
     case 'wheel':
       return <CircleDot className="w-4 h-4" />;
+    case 'board':
+      return <LayoutGrid className="w-4 h-4" />;
   }
 };
 
@@ -33,6 +35,8 @@ const getGameTypeName = (type: Game['type']) => {
       return 'Slides';
     case 'wheel':
       return 'Wheel';
+    case 'board':
+      return 'Board';
   }
 };
 
