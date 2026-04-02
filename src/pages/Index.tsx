@@ -12,7 +12,7 @@ import {
   CharacterDrawing,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
-import { Game, GameShow, GridGame, SlidesGame, WheelGame } from '@/types/game';
+import { Game, GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
 import { 
   FolderOpen, 
   FileText,
