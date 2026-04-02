@@ -40,7 +40,7 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
 
   if (!currentSession) {
     return (
-      <Window title="Start Game Show" onClose={handleClose} width={350} height={200} initialPosition={{ x: 200, y: 150 }}>
+      <Window title="Start Game Show" onClose={handleClose} width={450} height={280} initialPosition={{ x: 443, y: 303 }}>
         <div className="p-4 flex flex-col gap-4">
           <p className="text-xs">Starting: <strong>{gameShow.name}</strong> ({gameShow.games.length} games)</p>
           <Input
