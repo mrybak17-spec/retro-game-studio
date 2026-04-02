@@ -440,6 +440,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
         return renderSlidesGame(currentGame as SlidesGame);
       case 'wheel':
         return renderWheelGame(currentGame as WheelGame);
+      case 'board':
+        return renderBoardGame(currentGame as BoardGame);
       default:
         return null;
     }
