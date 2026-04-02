@@ -68,6 +68,7 @@ const Index = () => {
   
   // For lobby
   const [pendingGameShow, setPendingGameShow] = useState<GameShow | null>(null);
+  const [editingShowId, setEditingShowId] = useState<string | null>(null);
 
   const { 
     games, 
