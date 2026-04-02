@@ -62,10 +62,10 @@ export const GamesLibrary: React.FC<GamesLibraryProps> = ({
     <Window
       title="My Games"
       onClose={onClose}
-      width={550}
-      height={450}
+      width={700}
+      height={550}
       resizable
-      initialPosition={{ x: 150, y: 80 }}
+      initialPosition={{ x: 318, y: 168 }}
       statusBar={
         <span className="win95-statusbar-section flex-1">
           {gameShows.length} show{gameShows.length !== 1 ? 's' : ''}, {games.length} individual game{games.length !== 1 ? 's' : ''}

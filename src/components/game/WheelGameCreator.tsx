@@ -154,9 +154,9 @@ export const WheelGameCreator: React.FC<WheelGameCreatorProps> = ({
     <Window
       title="Wheel Game Creator"
       onClose={onClose}
-      width={700}
-      height={500}
-      initialPosition={{ x: 100, y: 60 }}
+      width={850}
+      height={650}
+      initialPosition={{ x: 243, y: 118 }}
       statusBar={
         <span className="win95-statusbar-section flex-1">
           {segments.length} segments • Click a segment to edit

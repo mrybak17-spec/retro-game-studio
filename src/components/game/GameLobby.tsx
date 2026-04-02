@@ -64,10 +64,10 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
     <Window
       title={`Game Lobby - ${currentSession.code}`}
       onClose={handleClose}
-      width={450}
-      height={400}
+      width={650}
+      height={550}
       resizable
-      initialPosition={{ x: 150, y: 80 }}
+      initialPosition={{ x: 343, y: 168 }}
     >
       <div className="p-2 flex flex-col gap-2 h-full">
         <GroupBox label="Game Code">

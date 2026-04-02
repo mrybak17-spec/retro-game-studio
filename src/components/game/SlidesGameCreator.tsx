@@ -93,9 +93,9 @@ export const SlidesGameCreator: React.FC<SlidesGameCreatorProps> = ({
     <Window
       title="Slides Game Creator"
       onClose={onClose}
-      width={750}
-      height={550}
-      initialPosition={{ x: 80, y: 50 }}
+      width={900}
+      height={650}
+      initialPosition={{ x: 218, y: 118 }}
       statusBar={
         <span className="win95-statusbar-section flex-1">
           Slide {currentSlideIndex + 1} of {slides.length}

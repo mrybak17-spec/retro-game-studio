@@ -95,9 +95,9 @@ export const GridGameCreator: React.FC<GridGameCreatorProps> = ({
     <Window
       title="Grid Game Creator"
       onClose={onClose}
-      width={800}
-      height={600}
-      initialPosition={{ x: 50, y: 30 }}
+      width={950}
+      height={700}
+      initialPosition={{ x: 193, y: 93 }}
       statusBar={
         <span className="win95-statusbar-section flex-1">
           {selectedCell
