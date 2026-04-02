@@ -24,6 +24,7 @@ type WindowType =
   | 'gridCreator'
   | 'slidesCreator'
   | 'wheelCreator'
+  | 'boardCreator'
   | 'gamesLibrary'
   | 'gameLobby'
   | 'characterDrawing'
