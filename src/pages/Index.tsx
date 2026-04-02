@@ -332,6 +332,18 @@ const Index = () => {
     setActiveWindow('gameLobby');
   };
 
+  const handleEditGameShow = useCallback((show: GameShow) => {
+    setWizardState({
+      showName: show.name,
+      games: [...show.games],
+      editingIndex: null,
+    });
+    setIsWizardFlow(false);
+    // Store the show id so we can update instead of creating new
+    setEditingShowId(show.id);
+    setActiveWindow('newGameWizard');
+  }, []);
+
   // Get current game being edited (for editors)
   const getCurrentEditGame = (): Game | undefined => {
     if (isWizardFlow && wizardState.editingIndex !== null) {
