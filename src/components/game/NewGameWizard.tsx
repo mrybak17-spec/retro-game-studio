@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
-import { Grid3X3, Presentation, CircleDot, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
+import { Grid3X3, Presentation, CircleDot, LayoutGrid, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
 import { Game } from '@/types/game';
 
 interface NewGameWizardProps {
