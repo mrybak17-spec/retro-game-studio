@@ -55,7 +55,32 @@ export interface WheelGame {
   segments: WheelSegment[];
 }
 
-export type Game = GridGame | SlidesGame | WheelGame;
+export interface BoardCell {
+  id: string;
+  question: string;
+  answer: string;
+  displayText: string;
+  teamColor?: string;
+  points?: number;
+  revealed?: boolean;
+  imageUrl?: string;
+  audioUrl?: string;
+}
+
+export interface BoardGame {
+  id: string;
+  type: 'board';
+  name: string;
+  columns: number;
+  rows: number;
+  rowNames: string[];
+  cells: BoardCell[][];
+  teamColor1: string;
+  teamColor2: string;
+  pointValues: number[];
+}
+
+export type Game = GridGame | SlidesGame | WheelGame | BoardGame;
 
 // Game Show - Collection of multiple games
 export interface GameShow {

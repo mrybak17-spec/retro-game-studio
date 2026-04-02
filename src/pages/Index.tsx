@@ -4,6 +4,7 @@ import {
   GridGameCreator,
   SlidesGameCreator,
   WheelGameCreator,
+  BoardGameCreator,
   GamesLibrary,
   NewGameWizard,
   GameLobby,
@@ -11,7 +12,7 @@ import {
   CharacterDrawing,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
-import { Game, GameShow, GridGame, SlidesGame, WheelGame } from '@/types/game';
+import { Game, GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
 import { 
   FolderOpen, 
   FileText,
@@ -23,6 +24,7 @@ type WindowType =
   | 'gridCreator'
   | 'slidesCreator'
   | 'wheelCreator'
+  | 'boardCreator'
   | 'gamesLibrary'
   | 'gameLobby'
   | 'characterDrawing'
@@ -102,8 +104,8 @@ const Index = () => {
 
   // Handle opening a game editor from the wizard
   const handleEditGameFromWizard = useCallback((
-    type: 'grid' | 'slides' | 'wheel',
-    gameIndex: number | null // null = new game, number = edit existing
+    type: 'grid' | 'slides' | 'wheel' | 'board',
+    gameIndex: number | null
   ) => {
     setWizardState(prev => ({ ...prev, editingIndex: gameIndex }));
     setIsWizardFlow(true);
@@ -117,6 +119,9 @@ const Index = () => {
         break;
       case 'wheel':
         setActiveWindow('wheelCreator');
+        break;
+      case 'board':
+        setActiveWindow('boardCreator');
         break;
     }
   }, []);
@@ -308,6 +313,9 @@ const Index = () => {
       case 'wheel':
         setActiveWindow('wheelCreator');
         break;
+      case 'board':
+        setActiveWindow('boardCreator');
+        break;
     }
   }, []);
 
@@ -428,6 +436,8 @@ const Index = () => {
               ? 'Slides Game Creator'
               : activeWindow === 'wheelCreator'
               ? 'Wheel Game Creator'
+              : activeWindow === 'boardCreator'
+              ? 'Board Game Creator'
               : activeWindow === 'gamesLibrary'
               ? 'My Games'
               : activeWindow === 'gameLobby'
@@ -511,6 +521,15 @@ const Index = () => {
       {activeWindow === 'wheelCreator' && (
         <WheelGameCreator
           game={currentEditGame?.type === 'wheel' ? currentEditGame as WheelGame : undefined}
+          onSave={handleEditorSave}
+          onClose={handleEditorClose}
+          saveLabel={getSaveLabel()}
+        />
+      )}
+
+      {activeWindow === 'boardCreator' && (
+        <BoardGameCreator
+          game={currentEditGame?.type === 'board' ? currentEditGame as BoardGame : undefined}
           onSave={handleEditorSave}
           onClose={handleEditorClose}
           saveLabel={getSaveLabel()}

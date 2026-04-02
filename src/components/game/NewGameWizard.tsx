@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
-import { Grid3X3, Presentation, CircleDot, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
+import { Grid3X3, Presentation, CircleDot, LayoutGrid, Trash2, Edit, ChevronUp, ChevronDown } from 'lucide-react';
 import { Game } from '@/types/game';
 
 interface NewGameWizardProps {
@@ -8,7 +8,7 @@ interface NewGameWizardProps {
   games: Game[];
   onShowNameChange: (name: string) => void;
   onGamesChange: (games: Game[]) => void;
-  onEditGame: (type: 'grid' | 'slides' | 'wheel', gameIndex: number | null) => void;
+  onEditGame: (type: 'grid' | 'slides' | 'wheel' | 'board', gameIndex: number | null) => void;
   onSaveShow: () => void;
   onPlayShow: () => void;
   onClose: () => void;
@@ -22,6 +22,8 @@ const getGameIcon = (type: Game['type']) => {
       return <Presentation className="w-4 h-4" />;
     case 'wheel':
       return <CircleDot className="w-4 h-4" />;
+    case 'board':
+      return <LayoutGrid className="w-4 h-4" />;
   }
 };
 
@@ -33,6 +35,8 @@ const getGameTypeName = (type: Game['type']) => {
       return 'Slides';
     case 'wheel':
       return 'Wheel';
+    case 'board':
+      return 'Board';
   }
 };
 
@@ -46,7 +50,7 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
   onPlayShow,
   onClose,
 }) => {
-  const [selectedType, setSelectedType] = useState<'grid' | 'slides' | 'wheel' | null>(null);
+  const [selectedType, setSelectedType] = useState<'grid' | 'slides' | 'wheel' | 'board' | null>(null);
   const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
 
   const gameTypes = [
@@ -67,6 +71,12 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
       icon: <CircleDot className="w-8 h-8" />,
       title: 'Wheel Game',
       description: 'Spin to reveal questions',
+    },
+    {
+      id: 'board' as const,
+      icon: <LayoutGrid className="w-8 h-8" />,
+      title: 'Board Game',
+      description: 'Cards with team colors & points',
     },
   ];
 
