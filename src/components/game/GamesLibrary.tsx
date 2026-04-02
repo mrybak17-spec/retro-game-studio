@@ -189,6 +189,13 @@ export const GamesLibrary: React.FC<GamesLibraryProps> = ({
                   Play
                 </Button>
                 <Button
+                  onClick={() => selectedShow && onEditShow?.(selectedShow)}
+                  disabled={!selectedShow}
+                >
+                  <Edit className="w-3 h-3 mr-1" />
+                  Edit
+                </Button>
+                <Button
                   onClick={() => selectedShow && onDeleteShow(selectedShow.id)}
                   disabled={!selectedShow}
                 >
