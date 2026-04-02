@@ -525,6 +525,15 @@ const Index = () => {
         />
       )}
 
+      {activeWindow === 'boardCreator' && (
+        <BoardGameCreator
+          game={currentEditGame?.type === 'board' ? currentEditGame as BoardGame : undefined}
+          onSave={handleEditorSave}
+          onClose={handleEditorClose}
+          saveLabel={getSaveLabel()}
+        />
+      )}
+
       {activeWindow === 'gamesLibrary' && (
         <GamesLibrary
           games={games}
