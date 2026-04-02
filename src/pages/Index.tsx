@@ -313,6 +313,9 @@ const Index = () => {
       case 'wheel':
         setActiveWindow('wheelCreator');
         break;
+      case 'board':
+        setActiveWindow('boardCreator');
+        break;
     }
   }, []);
 

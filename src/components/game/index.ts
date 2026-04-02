@@ -1,6 +1,7 @@
 export { GridGameCreator } from './GridGameCreator';
 export { SlidesGameCreator } from './SlidesGameCreator';
 export { WheelGameCreator } from './WheelGameCreator';
+export { BoardGameCreator } from './BoardGameCreator';
 export { GamesLibrary } from './GamesLibrary';
 export { NewGameWizard } from './NewGameWizard';
 export { GameShowCreator } from './GameShowCreator';
