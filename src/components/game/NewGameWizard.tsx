@@ -8,7 +8,7 @@ interface NewGameWizardProps {
   games: Game[];
   onShowNameChange: (name: string) => void;
   onGamesChange: (games: Game[]) => void;
-  onEditGame: (type: 'grid' | 'slides' | 'wheel', gameIndex: number | null) => void;
+  onEditGame: (type: 'grid' | 'slides' | 'wheel' | 'board', gameIndex: number | null) => void;
   onSaveShow: () => void;
   onPlayShow: () => void;
   onClose: () => void;
