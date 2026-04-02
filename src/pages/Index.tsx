@@ -436,6 +436,8 @@ const Index = () => {
               ? 'Slides Game Creator'
               : activeWindow === 'wheelCreator'
               ? 'Wheel Game Creator'
+              : activeWindow === 'boardCreator'
+              ? 'Board Game Creator'
               : activeWindow === 'gamesLibrary'
               ? 'My Games'
               : activeWindow === 'gameLobby'
