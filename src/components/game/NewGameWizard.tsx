@@ -50,7 +50,7 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
   onPlayShow,
   onClose,
 }) => {
-  const [selectedType, setSelectedType] = useState<'grid' | 'slides' | 'wheel' | null>(null);
+  const [selectedType, setSelectedType] = useState<'grid' | 'slides' | 'wheel' | 'board' | null>(null);
   const [selectedGameIndex, setSelectedGameIndex] = useState<number | null>(null);
 
   const gameTypes = [
