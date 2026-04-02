@@ -522,6 +522,7 @@ const Index = () => {
           games={games}
           gameShows={gameShows}
           onEdit={handleEditGameFromLibrary}
+          onEditShow={handleEditGameShow}
           onPlay={handlePlaySingleGame}
           onPlayShow={handlePlayGameShow}
           onDelete={handleDeleteGame}
