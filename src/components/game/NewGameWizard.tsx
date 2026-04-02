@@ -72,6 +72,12 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
       title: 'Wheel Game',
       description: 'Spin to reveal questions',
     },
+    {
+      id: 'board' as const,
+      icon: <LayoutGrid className="w-8 h-8" />,
+      title: 'Board Game',
+      description: 'Cards with team colors & points',
+    },
   ];
 
   const handleDeleteGame = (index: number) => {
