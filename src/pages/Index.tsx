@@ -4,6 +4,7 @@ import {
   GridGameCreator,
   SlidesGameCreator,
   WheelGameCreator,
+  BoardGameCreator,
   GamesLibrary,
   NewGameWizard,
   GameLobby,
