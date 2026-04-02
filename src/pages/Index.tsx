@@ -208,7 +208,7 @@ const Index = () => {
   // Handle saving a game show
   const handleSaveGameShow = useCallback(() => {
     const show: GameShow = {
-      id: crypto.randomUUID(),
+      id: editingShowId || crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
@@ -227,16 +227,20 @@ const Index = () => {
       return;
     }
 
-    addGameShow(show);
+    if (editingShowId) {
+      updateGameShow(editingShowId, show);
+    } else {
+      addGameShow(show);
+    }
     resetWizardState();
     setActiveWindow(null);
     setDialog({
       show: true,
       title: 'Success',
-      message: `Game Show "${show.name}" has been saved!`,
+      message: `Game Show "${show.name}" has been ${editingShowId ? 'updated' : 'saved'}!`,
       type: 'info',
     });
-  }, [wizardState, validateGameShow, addGameShow]);
+  }, [wizardState, editingShowId, validateGameShow, addGameShow, updateGameShow]);
 
   // Handle playing a game show from wizard
   const handlePlayGameShowFromWizard = useCallback(() => {
