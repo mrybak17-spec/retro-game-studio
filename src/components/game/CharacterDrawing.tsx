@@ -142,9 +142,9 @@ export const CharacterDrawing: React.FC<CharacterDrawingProps> = ({ onComplete, 
     <Window
       title={`Draw Your Character - ${currentPlayer.name}`}
       onClose={onClose}
-      width={450}
-      height={480}
-      initialPosition={{ x: 200, y: 50 }}
+      width={600}
+      height={600}
+      initialPosition={{ x: 368, y: 143 }}
     >
       <div className="p-2 flex flex-col gap-2 h-full">
         <div className="text-xs text-center mb-1">

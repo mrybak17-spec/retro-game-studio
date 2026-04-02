@@ -68,6 +68,7 @@ const Index = () => {
   
   // For lobby
   const [pendingGameShow, setPendingGameShow] = useState<GameShow | null>(null);
+  const [editingShowId, setEditingShowId] = useState<string | null>(null);
 
   const { 
     games, 
@@ -96,6 +97,7 @@ const Index = () => {
       games: [],
       editingIndex: null,
     });
+    setEditingShowId(null);
   };
 
   // Handle opening a game editor from the wizard
@@ -206,7 +208,7 @@ const Index = () => {
   // Handle saving a game show
   const handleSaveGameShow = useCallback(() => {
     const show: GameShow = {
-      id: crypto.randomUUID(),
+      id: editingShowId || crypto.randomUUID(),
       name: wizardState.showName,
       description: '',
       games: wizardState.games,
@@ -225,16 +227,20 @@ const Index = () => {
       return;
     }
 
-    addGameShow(show);
+    if (editingShowId) {
+      updateGameShow(editingShowId, show);
+    } else {
+      addGameShow(show);
+    }
     resetWizardState();
     setActiveWindow(null);
     setDialog({
       show: true,
       title: 'Success',
-      message: `Game Show "${show.name}" has been saved!`,
+      message: `Game Show "${show.name}" has been ${editingShowId ? 'updated' : 'saved'}!`,
       type: 'info',
     });
-  }, [wizardState, validateGameShow, addGameShow]);
+  }, [wizardState, editingShowId, validateGameShow, addGameShow, updateGameShow]);
 
   // Handle playing a game show from wizard
   const handlePlayGameShowFromWizard = useCallback(() => {
@@ -331,6 +337,18 @@ const Index = () => {
     setPendingGameShow(show);
     setActiveWindow('gameLobby');
   };
+
+  const handleEditGameShow = useCallback((show: GameShow) => {
+    setWizardState({
+      showName: show.name,
+      games: [...show.games],
+      editingIndex: null,
+    });
+    setIsWizardFlow(false);
+    // Store the show id so we can update instead of creating new
+    setEditingShowId(show.id);
+    setActiveWindow('newGameWizard');
+  }, []);
 
   // Get current game being edited (for editors)
   const getCurrentEditGame = (): Game | undefined => {
@@ -504,6 +522,7 @@ const Index = () => {
           games={games}
           gameShows={gameShows}
           onEdit={handleEditGameFromLibrary}
+          onEditShow={handleEditGameShow}
           onPlay={handlePlaySingleGame}
           onPlayShow={handlePlayGameShow}
           onDelete={handleDeleteGame}

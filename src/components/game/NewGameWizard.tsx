@@ -101,10 +101,10 @@ export const NewGameWizard: React.FC<NewGameWizardProps> = ({
     <Window
       title="New Game Show"
       onClose={onClose}
-      width={650}
-      height={420}
+      width={800}
+      height={550}
       resizable
-      initialPosition={{ x: 120, y: 80 }}
+      initialPosition={{ x: 268, y: 168 }}
     >
       <div className="flex h-full gap-2 p-2">
         {/* Left Panel - Game Type Selection */}
