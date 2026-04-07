@@ -306,7 +306,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                 <strong>Answer:</strong> {lastCell.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowGridAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowGridAnswer(true); if (sessionId) updateGameState(sessionId, { revealedCells: Array.from(revealedCells), lastRevealedCellId: Array.from(revealedCells).pop(), showAnswer: true }).catch(console.error); }}>Reveal Answer</Button>
             )}
           </div>
         )}
@@ -481,7 +481,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                 <strong>Answer:</strong> {selectedSegment.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowWheelAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowWheelAnswer(true); if (sessionId) { const seg = (currentGame as WheelGame).segments.filter(s => !usedSegments.has(s.id))[selectedSegmentIndex!]; updateGameState(sessionId, { selectedSegmentId: seg?.id, showAnswer: true }).catch(console.error); } }}>Reveal Answer</Button>
             )}
           </div>
         )}
@@ -709,7 +709,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             {showBoardAnswer ? (
               <div className="text-sm text-green-700"><strong>Answer:</strong> {lastRevealedCell.answer}</div>
             ) : (
-              <Button onClick={() => setShowBoardAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowBoardAnswer(true); if (sessionId) updateGameState(sessionId, { showAnswer: true, boardPhase: 'phase2' }).catch(console.error); }}>Reveal Answer</Button>
             )}
           </div>
         )}
