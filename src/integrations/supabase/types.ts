@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      game_sessions: {
+        Row: {
+          code: string
+          created_at: string
+          current_game_index: number
+          game_show_data: Json
+          game_state: Json
+          host_id: string
+          id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_game_index?: number
+          game_show_data?: Json
+          game_state?: Json
+          host_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_game_index?: number
+          game_show_data?: Json
+          game_state?: Json
+          host_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       game_shows: {
         Row: {
           created_at: string
@@ -40,6 +76,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      session_players: {
+        Row: {
+          created_at: string
+          drawing: string | null
+          id: string
+          is_host: boolean
+          name: string
+          player_id: string
+          points: number
+          session_id: string
+        }
+        Insert: {
+          created_at?: string
+          drawing?: string | null
+          id?: string
+          is_host?: boolean
+          name: string
+          player_id: string
+          points?: number
+          session_id: string
+        }
+        Update: {
+          created_at?: string
+          drawing?: string | null
+          id?: string
+          is_host?: boolean
+          name?: string
+          player_id?: string
+          points?: number
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_players_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

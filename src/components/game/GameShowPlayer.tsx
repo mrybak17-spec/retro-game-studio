@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GridGame, SlidesGame, WheelGame, BoardGame, BoardCell, Player } from '@/types/game';
 import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle, Volume2 } from 'lucide-react';
+import { updateGameState, updateSessionStatus, updatePlayerPointsDb } from '@/lib/multiplayerService';
 
 interface GameShowPlayerProps {
+  sessionId?: string | null;
   onClose: () => void;
 }
 
-export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
+export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClose }) => {
   const { currentSession, updatePlayerPoints, advanceToNextGame, endSession } = useGameStore();
   const [revealedCells, setRevealedCells] = useState<Set<string>>(new Set());
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -32,6 +34,25 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const [showBoardAnswer, setShowBoardAnswer] = useState(false);
   const [revealedBoardCell, setRevealedBoardCell] = useState<string | null>(null);
 
+  // Sync game state to DB for multiplayer
+  const syncToDb = useCallback((overrides?: any) => {
+    if (!sessionId) return;
+    const state = {
+      revealedCells: Array.from(revealedCells),
+      currentSlideIndex,
+      showGridAnswer,
+      showWheelAnswer,
+      showBoardAnswer,
+      boardPhase,
+      lastRevealedCellId: Array.from(revealedCells).pop() || null,
+      selectedSegmentId: selectedSegmentIndex !== null ? (currentSession?.gameShow.games[currentSession.currentGameIndex] as any)?.segments?.filter((s: any) => !usedSegments.has(s.id))?.[selectedSegmentIndex]?.id : null,
+      showAnswer: showGridAnswer || showWheelAnswer || showBoardAnswer,
+      showAnswerForSlides: Array.from(showAnswerForSlide),
+      ...overrides,
+    };
+    updateGameState(sessionId, state, currentSession?.currentGameIndex).catch(console.error);
+  }, [sessionId, revealedCells, currentSlideIndex, showGridAnswer, showWheelAnswer, showBoardAnswer, boardPhase, selectedSegmentIndex, usedSegments, showAnswerForSlide, currentSession]);
+
   if (!currentSession) {
     return null;
   }
@@ -42,6 +63,9 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const host = players.find(p => p.isHost);
 
   const handleClose = () => {
+    if (sessionId) {
+      updateSessionStatus(sessionId, 'ended').catch(console.error);
+    }
     endSession();
     onClose();
   };
@@ -59,12 +83,24 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
     setRevealedBoardCell(null);
     setShowBoardAnswer(false);
     advanceToNextGame();
+    if (sessionId) {
+      const nextIdx = (currentSession?.currentGameIndex || 0) + 1;
+      updateGameState(sessionId, { revealedCells: [], showAnswer: false, currentSlideIndex: 0 }, nextIdx).catch(console.error);
+    }
   };
 
   const handleCellClick = (cellId: string) => {
     if (!revealedCells.has(cellId)) {
-      setRevealedCells(new Set([...revealedCells, cellId]));
+      const newRevealed = new Set([...revealedCells, cellId]);
+      setRevealedCells(newRevealed);
       setShowGridAnswer(false);
+      if (sessionId) {
+        updateGameState(sessionId, {
+          revealedCells: Array.from(newRevealed),
+          lastRevealedCellId: cellId,
+          showAnswer: false,
+        }).catch(console.error);
+      }
     }
   };
 
@@ -270,7 +306,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
                 <strong>Answer:</strong> {lastCell.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowGridAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowGridAnswer(true); if (sessionId) updateGameState(sessionId, { revealedCells: Array.from(revealedCells), lastRevealedCellId: Array.from(revealedCells).pop(), showAnswer: true }).catch(console.error); }}>Reveal Answer</Button>
             )}
           </div>
         )}
@@ -304,7 +340,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
         {/* Controls */}
         <div className="flex items-center justify-center gap-2 mt-2">
           <Button
-            onClick={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
+            onClick={() => { const idx = Math.max(0, currentSlideIndex - 1); setCurrentSlideIndex(idx); if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error); }}
             disabled={currentSlideIndex === 0}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -313,7 +349,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
             {currentSlideIndex + 1} / {game.slides.length}
           </span>
           <Button
-            onClick={() => setCurrentSlideIndex(Math.min(game.slides.length - 1, currentSlideIndex + 1))}
+            onClick={() => { const idx = Math.min(game.slides.length - 1, currentSlideIndex + 1); setCurrentSlideIndex(idx); if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error); }}
             disabled={currentSlideIndex === game.slides.length - 1}
           >
             <ChevronRight className="w-4 h-4" />
@@ -445,7 +481,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
                 <strong>Answer:</strong> {selectedSegment.answer}
               </div>
             ) : (
-              <Button onClick={() => setShowWheelAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowWheelAnswer(true); if (sessionId) { const seg = (currentGame as WheelGame).segments.filter(s => !usedSegments.has(s.id))[selectedSegmentIndex!]; updateGameState(sessionId, { selectedSegmentId: seg?.id, showAnswer: true }).catch(console.error); } }}>Reveal Answer</Button>
             )}
           </div>
         )}
@@ -673,7 +709,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
             {showBoardAnswer ? (
               <div className="text-sm text-green-700"><strong>Answer:</strong> {lastRevealedCell.answer}</div>
             ) : (
-              <Button onClick={() => setShowBoardAnswer(true)}>Reveal Answer</Button>
+              <Button onClick={() => { setShowBoardAnswer(true); if (sessionId) updateGameState(sessionId, { showAnswer: true, boardPhase: 'phase2' }).catch(console.error); }}>Reveal Answer</Button>
             )}
           </div>
         )}

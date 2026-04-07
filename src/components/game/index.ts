@@ -8,3 +8,5 @@ export { GameShowCreator } from './GameShowCreator';
 export { GameLobby } from './GameLobby';
 export { GameShowPlayer } from './GameShowPlayer';
 export { CharacterDrawing } from './CharacterDrawing';
+export { JoinGame } from './JoinGame';
+export { PlayerView } from './PlayerView';
