@@ -83,12 +83,24 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
     setRevealedBoardCell(null);
     setShowBoardAnswer(false);
     advanceToNextGame();
+    if (sessionId) {
+      const nextIdx = (currentSession?.currentGameIndex || 0) + 1;
+      updateGameState(sessionId, { revealedCells: [], showAnswer: false, currentSlideIndex: 0 }, nextIdx).catch(console.error);
+    }
   };
 
   const handleCellClick = (cellId: string) => {
     if (!revealedCells.has(cellId)) {
-      setRevealedCells(new Set([...revealedCells, cellId]));
+      const newRevealed = new Set([...revealedCells, cellId]);
+      setRevealedCells(newRevealed);
       setShowGridAnswer(false);
+      if (sessionId) {
+        updateGameState(sessionId, {
+          revealedCells: Array.from(newRevealed),
+          lastRevealedCellId: cellId,
+          showAnswer: false,
+        }).catch(console.error);
+      }
     }
   };
 
