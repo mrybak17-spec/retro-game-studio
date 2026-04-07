@@ -10,6 +10,8 @@ import {
   GameLobby,
   GameShowPlayer,
   CharacterDrawing,
+  JoinGame,
+  PlayerView,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
@@ -17,6 +19,7 @@ import {
   FolderOpen, 
   FileText,
   HelpCircle,
+  Gamepad2,
 } from 'lucide-react';
 
 type WindowType = 
@@ -29,6 +32,8 @@ type WindowType =
   | 'gameLobby'
   | 'characterDrawing'
   | 'gamePlayer'
+  | 'joinGame'
+  | 'playerView'
   | null;
 
 interface DialogState {
@@ -42,7 +47,7 @@ interface DialogState {
 interface WizardState {
   showName: string;
   games: Game[];
-  editingIndex: number | null; // null = adding new, number = editing existing
+  editingIndex: number | null;
 }
 
 const Index = () => {
@@ -55,22 +60,19 @@ const Index = () => {
     type: 'info',
   });
 
-  // Wizard state - persists when switching between wizard and editors
   const [wizardState, setWizardState] = useState<WizardState>({
     showName: 'My Game Show',
     games: [],
     editingIndex: null,
   });
   
-  // Track if we're in wizard flow or standalone edit
   const [isWizardFlow, setIsWizardFlow] = useState(false);
-  
-  // For editing from library
   const [libraryEditGame, setLibraryEditGame] = useState<Game | null>(null);
-  
-  // For lobby
   const [pendingGameShow, setPendingGameShow] = useState<GameShow | null>(null);
   const [editingShowId, setEditingShowId] = useState<string | null>(null);
+  
+  // Multiplayer state
+  const [multiplayerSessionId, setMultiplayerSessionId] = useState<string | null>(null);
 
   const { 
     games, 
@@ -87,130 +89,76 @@ const Index = () => {
     deleteGameShow,
   } = useGameStore();
 
-  // Load game shows from cloud on mount
   useEffect(() => {
     loadGameShowsFromCloud();
   }, [loadGameShowsFromCloud]);
 
-  // Reset wizard state
   const resetWizardState = () => {
-    setWizardState({
-      showName: 'My Game Show',
-      games: [],
-      editingIndex: null,
-    });
+    setWizardState({ showName: 'My Game Show', games: [], editingIndex: null });
     setEditingShowId(null);
   };
 
-  // Handle opening a game editor from the wizard
-  const handleEditGameFromWizard = useCallback((
-    type: 'grid' | 'slides' | 'wheel' | 'board',
-    gameIndex: number | null
-  ) => {
+  const handleEditGameFromWizard = useCallback((type: 'grid' | 'slides' | 'wheel' | 'board', gameIndex: number | null) => {
     setWizardState(prev => ({ ...prev, editingIndex: gameIndex }));
     setIsWizardFlow(true);
-    
     switch (type) {
-      case 'grid':
-        setActiveWindow('gridCreator');
-        break;
-      case 'slides':
-        setActiveWindow('slidesCreator');
-        break;
-      case 'wheel':
-        setActiveWindow('wheelCreator');
-        break;
-      case 'board':
-        setActiveWindow('boardCreator');
-        break;
+      case 'grid': setActiveWindow('gridCreator'); break;
+      case 'slides': setActiveWindow('slidesCreator'); break;
+      case 'wheel': setActiveWindow('wheelCreator'); break;
+      case 'board': setActiveWindow('boardCreator'); break;
     }
   }, []);
 
-  // Handle adding/updating a game from editor (wizard flow)
   const handleSaveFromWizardEditor = useCallback((game: Game) => {
     const errors = validateGame(game);
-    
     if (errors.length > 0) {
-      setDialog({
-        show: true,
-        title: 'Validation Error',
-        message: `Please fix the following:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`,
-        type: 'warning',
-      });
+      setDialog({ show: true, title: 'Validation Error', message: `Please fix:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`, type: 'warning' });
       return;
     }
-
     setWizardState(prev => {
       if (prev.editingIndex !== null) {
-        // Update existing game
         const newGames = [...prev.games];
         newGames[prev.editingIndex] = game;
         return { ...prev, games: newGames, editingIndex: null };
-      } else {
-        // Add new game
-        return { ...prev, games: [...prev.games, game], editingIndex: null };
       }
+      return { ...prev, games: [...prev.games, game], editingIndex: null };
     });
-    
     setIsWizardFlow(false);
     setActiveWindow('newGameWizard');
   }, [validateGame]);
 
-  // Handle closing editor in wizard flow
   const handleCloseWizardEditor = useCallback(() => {
     setWizardState(prev => ({ ...prev, editingIndex: null }));
     setIsWizardFlow(false);
     setActiveWindow('newGameWizard');
   }, []);
 
-  // Handle saving from library edit
   const handleSaveFromLibraryEditor = useCallback((game: Game) => {
     const errors = validateGame(game);
-    
     if (errors.length > 0) {
-      setDialog({
-        show: true,
-        title: 'Validation Error',
-        message: `Please fix the following:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`,
-        type: 'warning',
-      });
+      setDialog({ show: true, title: 'Validation Error', message: `Please fix:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}${errors.length > 3 ? `\n...and ${errors.length - 3} more` : ''}`, type: 'warning' });
       return;
     }
-
     if (libraryEditGame) {
       updateGame(libraryEditGame.id, game);
-      setDialog({
-        show: true,
-        title: 'Success',
-        message: `Game "${game.name}" has been updated!`,
-        type: 'info',
-      });
+      setDialog({ show: true, title: 'Success', message: `Game "${game.name}" has been updated!`, type: 'info' });
     } else {
       addGame(game);
-      setDialog({
-        show: true,
-        title: 'Success',
-        message: `Game "${game.name}" has been saved!`,
-        type: 'info',
-      });
+      setDialog({ show: true, title: 'Success', message: `Game "${game.name}" has been saved!`, type: 'info' });
     }
-    
     setLibraryEditGame(null);
     setActiveWindow(null);
   }, [libraryEditGame, validateGame, updateGame, addGame]);
 
-  // Handle closing library editor
   const handleCloseLibraryEditor = useCallback(() => {
     setLibraryEditGame(null);
     setActiveWindow(null);
   }, []);
 
-  // Handle wizard state updates from wizard component
   const handleWizardStateUpdate = useCallback((updates: Partial<WizardState>) => {
     setWizardState(prev => ({ ...prev, ...updates }));
   }, []);
 
-  // Handle saving a game show
   const handleSaveGameShow = useCallback(() => {
     const show: GameShow = {
       id: editingShowId || crypto.randomUUID(),
@@ -220,18 +168,11 @@ const Index = () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-
     const errors = validateGameShow(show);
     if (errors.length > 0) {
-      setDialog({
-        show: true,
-        title: 'Validation Error',
-        message: `Please fix the following:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}`,
-        type: 'warning',
-      });
+      setDialog({ show: true, title: 'Validation Error', message: `Please fix:\n\n${errors.slice(0, 3).map(e => `• ${e.message}`).join('\n')}`, type: 'warning' });
       return;
     }
-
     if (editingShowId) {
       updateGameShow(editingShowId, show);
     } else {
@@ -239,26 +180,14 @@ const Index = () => {
     }
     resetWizardState();
     setActiveWindow(null);
-    setDialog({
-      show: true,
-      title: 'Success',
-      message: `Game Show "${show.name}" has been ${editingShowId ? 'updated' : 'saved'}!`,
-      type: 'info',
-    });
+    setDialog({ show: true, title: 'Success', message: `Game Show "${show.name}" has been ${editingShowId ? 'updated' : 'saved'}!`, type: 'info' });
   }, [wizardState, editingShowId, validateGameShow, addGameShow, updateGameShow]);
 
-  // Handle playing a game show from wizard
   const handlePlayGameShowFromWizard = useCallback(() => {
     if (wizardState.games.length === 0) {
-      setDialog({
-        show: true,
-        title: 'No Games',
-        message: 'Add at least one game to play!',
-        type: 'warning',
-      });
+      setDialog({ show: true, title: 'No Games', message: 'Add at least one game to play!', type: 'warning' });
       return;
     }
-
     const show: GameShow = {
       id: crypto.randomUUID(),
       name: wizardState.showName,
@@ -267,14 +196,12 @@ const Index = () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    
     setPendingGameShow(show);
     setActiveWindow('gameLobby');
   }, [wizardState]);
 
-  // Handle starting the game from lobby - go to drawing phase first
-  const handleStartGame = useCallback(() => {
-    // Update session status to drawing
+  const handleStartGame = useCallback((sessionId: string) => {
+    setMultiplayerSessionId(sessionId || null);
     const { currentSession } = useGameStore.getState();
     if (currentSession) {
       useGameStore.setState({
@@ -284,7 +211,6 @@ const Index = () => {
     setActiveWindow('characterDrawing');
   }, []);
 
-  // Handle playing a single game (wrap it in a show)
   const handlePlaySingleGame = useCallback((game: Game) => {
     const tempShow: GameShow = {
       id: crypto.randomUUID(),
@@ -298,47 +224,25 @@ const Index = () => {
     setActiveWindow('gameLobby');
   }, []);
 
-  // Handle editing an existing game from library
   const handleEditGameFromLibrary = useCallback((game: Game) => {
     setLibraryEditGame(game);
     setIsWizardFlow(false);
-    
     switch (game.type) {
-      case 'grid':
-        setActiveWindow('gridCreator');
-        break;
-      case 'slides':
-        setActiveWindow('slidesCreator');
-        break;
-      case 'wheel':
-        setActiveWindow('wheelCreator');
-        break;
-      case 'board':
-        setActiveWindow('boardCreator');
-        break;
+      case 'grid': setActiveWindow('gridCreator'); break;
+      case 'slides': setActiveWindow('slidesCreator'); break;
+      case 'wheel': setActiveWindow('wheelCreator'); break;
+      case 'board': setActiveWindow('boardCreator'); break;
     }
   }, []);
 
   const handleDeleteGame = (id: string) => {
     const game = games.find(g => g.id === id);
-    setDialog({
-      show: true,
-      title: 'Confirm Delete',
-      message: `Are you sure you want to delete "${game?.name}"?`,
-      type: 'question',
-      onConfirm: () => deleteGame(id),
-    });
+    setDialog({ show: true, title: 'Confirm Delete', message: `Are you sure you want to delete "${game?.name}"?`, type: 'question', onConfirm: () => deleteGame(id) });
   };
 
   const handleDeleteGameShow = (id: string) => {
     const show = gameShows.find(s => s.id === id);
-    setDialog({
-      show: true,
-      title: 'Confirm Delete',
-      message: `Are you sure you want to delete "${show?.name}"?`,
-      type: 'question',
-      onConfirm: () => useGameStore.getState().deleteGameShow(id),
-    });
+    setDialog({ show: true, title: 'Confirm Delete', message: `Are you sure you want to delete "${show?.name}"?`, type: 'question', onConfirm: () => useGameStore.getState().deleteGameShow(id) });
   };
 
   const handlePlayGameShow = (show: GameShow) => {
@@ -347,32 +251,26 @@ const Index = () => {
   };
 
   const handleEditGameShow = useCallback((show: GameShow) => {
-    setWizardState({
-      showName: show.name,
-      games: [...show.games],
-      editingIndex: null,
-    });
+    setWizardState({ showName: show.name, games: [...show.games], editingIndex: null });
     setIsWizardFlow(false);
-    // Store the show id so we can update instead of creating new
     setEditingShowId(show.id);
     setActiveWindow('newGameWizard');
   }, []);
 
-  // Get current game being edited (for editors)
+  // Join game handlers
+  const handleJoinedGame = useCallback((sessionId: string, playerId: string) => {
+    setMultiplayerSessionId(sessionId);
+    setActiveWindow('playerView');
+  }, []);
+
   const getCurrentEditGame = (): Game | undefined => {
-    if (isWizardFlow && wizardState.editingIndex !== null) {
-      return wizardState.games[wizardState.editingIndex];
-    }
-    if (libraryEditGame) {
-      return libraryEditGame;
-    }
+    if (isWizardFlow && wizardState.editingIndex !== null) return wizardState.games[wizardState.editingIndex];
+    if (libraryEditGame) return libraryEditGame;
     return undefined;
   };
 
   const getSaveLabel = (): string => {
-    if (isWizardFlow) {
-      return wizardState.editingIndex !== null ? 'Update' : 'Add';
-    }
+    if (isWizardFlow) return wizardState.editingIndex !== null ? 'Update' : 'Add';
     return 'Save';
   };
 
@@ -383,10 +281,7 @@ const Index = () => {
     {
       icon: <FileText className="w-8 h-8 text-yellow-300" />,
       label: 'New Game Show',
-      onClick: () => {
-        resetWizardState();
-        setActiveWindow('newGameWizard');
-      },
+      onClick: () => { resetWizardState(); setActiveWindow('newGameWizard'); },
     },
     {
       icon: <FolderOpen className="w-8 h-8 text-yellow-400" />,
@@ -394,96 +289,66 @@ const Index = () => {
       onClick: () => setActiveWindow('gamesLibrary'),
     },
     {
+      icon: <Gamepad2 className="w-8 h-8 text-green-400" />,
+      label: 'Join Game',
+      onClick: () => setActiveWindow('joinGame'),
+    },
+    {
       icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
       label: 'Help',
       onClick: () => setDialog({
         show: true,
         title: 'Game Show Maker Help',
-        message: 'Welcome to Game Show Maker 95!\n\n• Create game shows with multiple challenges\n• Add Grid, Slides, or Wheel games\n• Play with test players offline\n\nDouble-click icons to open!',
+        message: 'Welcome to Game Show Maker 95!\n\n• Create game shows with multiple challenges\n• Add Grid, Slides, Wheel, or Board games\n• Share the game code for multiplayer\n• Or add test players for offline play\n\nDouble-click icons to open!',
         type: 'info',
       }),
     },
   ];
 
   const startMenuItems = [
-    {
-      id: 'new',
-      icon: <FileText className="w-6 h-6" />,
-      label: 'New Game Show',
-      onClick: () => {
-        resetWizardState();
-        setActiveWindow('newGameWizard');
-      },
-    },
-    {
-      id: 'games',
-      icon: <FolderOpen className="w-6 h-6" />,
-      label: 'My Games',
-      onClick: () => setActiveWindow('gamesLibrary'),
-    },
+    { id: 'new', icon: <FileText className="w-6 h-6" />, label: 'New Game Show', onClick: () => { resetWizardState(); setActiveWindow('newGameWizard'); } },
+    { id: 'games', icon: <FolderOpen className="w-6 h-6" />, label: 'My Games', onClick: () => setActiveWindow('gamesLibrary') },
+    { id: 'join', icon: <Gamepad2 className="w-6 h-6" />, label: 'Join Game', onClick: () => setActiveWindow('joinGame') },
   ];
 
   const taskbarItems = activeWindow
-    ? [
-        {
-          id: activeWindow,
-          title:
-            activeWindow === 'newGameWizard'
-              ? 'New Game Show'
-              : activeWindow === 'gridCreator'
-              ? 'Grid Game Creator'
-              : activeWindow === 'slidesCreator'
-              ? 'Slides Game Creator'
-              : activeWindow === 'wheelCreator'
-              ? 'Wheel Game Creator'
-              : activeWindow === 'boardCreator'
-              ? 'Board Game Creator'
-              : activeWindow === 'gamesLibrary'
-              ? 'My Games'
-              : activeWindow === 'gameLobby'
-              ? 'Game Lobby'
-              : activeWindow === 'characterDrawing'
-              ? 'Draw Your Character'
-              : activeWindow === 'gamePlayer'
-              ? 'Playing...'
-              : 'Window',
-          active: true,
-          onClick: () => {},
-        },
-      ]
+    ? [{
+        id: activeWindow,
+        title:
+          activeWindow === 'newGameWizard' ? 'New Game Show'
+          : activeWindow === 'gridCreator' ? 'Grid Game Creator'
+          : activeWindow === 'slidesCreator' ? 'Slides Game Creator'
+          : activeWindow === 'wheelCreator' ? 'Wheel Game Creator'
+          : activeWindow === 'boardCreator' ? 'Board Game Creator'
+          : activeWindow === 'gamesLibrary' ? 'My Games'
+          : activeWindow === 'gameLobby' ? 'Game Lobby'
+          : activeWindow === 'characterDrawing' ? 'Draw Your Character'
+          : activeWindow === 'gamePlayer' ? 'Playing...'
+          : activeWindow === 'joinGame' ? 'Join Game'
+          : activeWindow === 'playerView' ? 'Game (Player)'
+          : 'Window',
+        active: true,
+        onClick: () => {},
+      }]
     : [];
 
   const currentEditGame = getCurrentEditGame();
 
   return (
     <div className="min-h-screen bg-background relative pb-7 overflow-hidden">
-      {/* Desktop Background Pattern */}
       <div 
         className="absolute inset-0 opacity-5"
         style={{
-          backgroundImage: `repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 2px,
-            rgba(0,0,0,0.1) 2px,
-            rgba(0,0,0,0.1) 4px
-          )`
+          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)`
         }}
       />
 
-      {/* Desktop Icons */}
       <div className="p-4 grid grid-cols-1 gap-1 content-start h-[calc(100vh-28px)]">
         {desktopIcons.map((icon, index) => (
-          <DesktopIcon
-            key={index}
-            icon={icon.icon}
-            label={icon.label}
-            onDoubleClick={icon.onClick}
-          />
+          <DesktopIcon key={index} icon={icon.icon} label={icon.label} onDoubleClick={icon.onClick} />
         ))}
       </div>
 
-      {/* Windows */}
       {activeWindow === 'newGameWizard' && (
         <NewGameWizard
           showName={wizardState.showName}
@@ -493,10 +358,7 @@ const Index = () => {
           onEditGame={handleEditGameFromWizard}
           onSaveShow={handleSaveGameShow}
           onPlayShow={handlePlayGameShowFromWizard}
-          onClose={() => {
-            resetWizardState();
-            setActiveWindow(null);
-          }}
+          onClose={() => { resetWizardState(); setActiveWindow(null); }}
         />
       )}
 
@@ -553,10 +415,7 @@ const Index = () => {
       {activeWindow === 'gameLobby' && pendingGameShow && (
         <GameLobby
           gameShow={pendingGameShow}
-          onClose={() => {
-            setPendingGameShow(null);
-            setActiveWindow(null);
-          }}
+          onClose={() => { setPendingGameShow(null); setActiveWindow(null); }}
           onStartGame={handleStartGame}
         />
       )}
@@ -574,14 +433,29 @@ const Index = () => {
 
       {activeWindow === 'gamePlayer' && currentSession && (
         <GameShowPlayer
+          sessionId={multiplayerSessionId}
           onClose={() => {
             setPendingGameShow(null);
+            setMultiplayerSessionId(null);
             setActiveWindow(null);
           }}
         />
       )}
 
-      {/* Dialog */}
+      {activeWindow === 'joinGame' && (
+        <JoinGame
+          onJoined={handleJoinedGame}
+          onClose={() => setActiveWindow(null)}
+        />
+      )}
+
+      {activeWindow === 'playerView' && multiplayerSessionId && (
+        <PlayerView
+          sessionId={multiplayerSessionId}
+          onClose={() => { setMultiplayerSessionId(null); setActiveWindow(null); }}
+        />
+      )}
+
       {dialog.show && (
         <Dialog
           title={dialog.title}
@@ -592,26 +466,17 @@ const Index = () => {
             dialog.type === 'question'
               ? [
                   { label: 'No', onClick: () => {} },
-                  {
-                    label: 'Yes',
-                    onClick: () => dialog.onConfirm?.(),
-                    primary: true,
-                  },
+                  { label: 'Yes', onClick: () => dialog.onConfirm?.(), primary: true },
                 ]
               : [{ label: 'OK', onClick: () => {}, primary: true }]
           }
         />
       )}
 
-      {/* Start Menu */}
       {startMenuOpen && (
-        <StartMenu
-          items={startMenuItems}
-          onClose={() => setStartMenuOpen(false)}
-        />
+        <StartMenu items={startMenuItems} onClose={() => setStartMenuOpen(false)} />
       )}
 
-      {/* Taskbar */}
       <Taskbar
         items={taskbarItems}
         onStartClick={() => setStartMenuOpen(!startMenuOpen)}
