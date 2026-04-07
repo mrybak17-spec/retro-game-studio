@@ -10,7 +10,7 @@ interface GameShowPlayerProps {
   onClose: () => void;
 }
 
-export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
+export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClose }) => {
   const { currentSession, updatePlayerPoints, advanceToNextGame, endSession } = useGameStore();
   const [revealedCells, setRevealedCells] = useState<Set<string>>(new Set());
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
