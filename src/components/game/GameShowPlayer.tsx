@@ -340,7 +340,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
         {/* Controls */}
         <div className="flex items-center justify-center gap-2 mt-2">
           <Button
-            onClick={() => setCurrentSlideIndex(Math.max(0, currentSlideIndex - 1))}
+            onClick={() => { const idx = Math.max(0, currentSlideIndex - 1); setCurrentSlideIndex(idx); if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error); }}
             disabled={currentSlideIndex === 0}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -349,7 +349,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             {currentSlideIndex + 1} / {game.slides.length}
           </span>
           <Button
-            onClick={() => setCurrentSlideIndex(Math.min(game.slides.length - 1, currentSlideIndex + 1))}
+            onClick={() => { const idx = Math.min(game.slides.length - 1, currentSlideIndex + 1); setCurrentSlideIndex(idx); if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error); }}
             disabled={currentSlideIndex === game.slides.length - 1}
           >
             <ChevronRight className="w-4 h-4" />
