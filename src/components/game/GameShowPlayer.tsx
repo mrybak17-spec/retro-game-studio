@@ -34,6 +34,25 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const [showBoardAnswer, setShowBoardAnswer] = useState(false);
   const [revealedBoardCell, setRevealedBoardCell] = useState<string | null>(null);
 
+  // Sync game state to DB for multiplayer
+  const syncToDb = useCallback((overrides?: any) => {
+    if (!sessionId) return;
+    const state = {
+      revealedCells: Array.from(revealedCells),
+      currentSlideIndex,
+      showGridAnswer,
+      showWheelAnswer,
+      showBoardAnswer,
+      boardPhase,
+      lastRevealedCellId: Array.from(revealedCells).pop() || null,
+      selectedSegmentId: selectedSegmentIndex !== null ? (currentSession?.gameShow.games[currentSession.currentGameIndex] as any)?.segments?.filter((s: any) => !usedSegments.has(s.id))?.[selectedSegmentIndex]?.id : null,
+      showAnswer: showGridAnswer || showWheelAnswer || showBoardAnswer,
+      showAnswerForSlides: Array.from(showAnswerForSlide),
+      ...overrides,
+    };
+    updateGameState(sessionId, state, currentSession?.currentGameIndex).catch(console.error);
+  }, [sessionId, revealedCells, currentSlideIndex, showGridAnswer, showWheelAnswer, showBoardAnswer, boardPhase, selectedSegmentIndex, usedSegments, showAnswerForSlide, currentSession]);
+
   if (!currentSession) {
     return null;
   }
@@ -44,6 +63,9 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const host = players.find(p => p.isHost);
 
   const handleClose = () => {
+    if (sessionId) {
+      updateSessionStatus(sessionId, 'ended').catch(console.error);
+    }
     endSession();
     onClose();
   };
