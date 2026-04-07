@@ -21,6 +21,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const [usedSegments, setUsedSegments] = useState<Set<string>>(new Set());
   const [chatMessages, setChatMessages] = useState<{player: string, message: string}[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [pointsPrompt, setPointsPrompt] = useState<{ playerId: string; direction: 'add' | 'subtract' } | null>(null);
+  const [pointsValue, setPointsValue] = useState('');
   
   // Board game state
   const [boardPhase, setBoardPhase] = useState<'phase1' | 'phase2'>('phase1');
@@ -131,14 +133,50 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
               <div className="flex items-center justify-between">
                 <span className="text-sm font-bold font-pixel">{player.points} pts</span>
                 <div className="flex gap-0.5">
-                  <Button variant="icon" onClick={() => updatePlayerPoints(player.id, -100)} title="-100">
+                  <Button variant="icon" onClick={() => { setPointsPrompt({ playerId: player.id, direction: 'subtract' }); setPointsValue(''); }} title="Subtract points">
                     <Minus className="w-3 h-3" />
                   </Button>
-                  <Button variant="icon" onClick={() => updatePlayerPoints(player.id, 100)} title="+100">
+                  <Button variant="icon" onClick={() => { setPointsPrompt({ playerId: player.id, direction: 'add' }); setPointsValue(''); }} title="Add points">
                     <Plus className="w-3 h-3" />
                   </Button>
                 </div>
               </div>
+              {pointsPrompt?.playerId === player.id && (
+                <div className="mt-1 flex gap-1 items-center">
+                  <input
+                    type="number"
+                    value={pointsValue}
+                    onChange={(e) => setPointsValue(e.target.value)}
+                    placeholder="pts"
+                    className="win95-input w-16 text-xs px-1 py-0.5"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const val = parseInt(pointsValue);
+                        if (!isNaN(val) && val > 0) {
+                          updatePlayerPoints(player.id, pointsPrompt.direction === 'add' ? val : -val);
+                          setPointsPrompt(null);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setPointsPrompt(null);
+                      }
+                    }}
+                  />
+                  <Button variant="icon" onClick={() => {
+                    const val = parseInt(pointsValue);
+                    if (!isNaN(val) && val > 0) {
+                      updatePlayerPoints(player.id, pointsPrompt.direction === 'add' ? val : -val);
+                      setPointsPrompt(null);
+                    }
+                  }}>
+                    <span className="text-xs">OK</span>
+                  </Button>
+                  <Button variant="icon" onClick={() => setPointsPrompt(null)}>
+                    <X className="w-3 h-3" />
+                  </Button>
+                </div>
+              )}
+
             </div>
           ))}
         </div>
