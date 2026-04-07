@@ -175,7 +175,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
                     <X className="w-3 h-3" />
                   </Button>
                 </div>
-              )
+              )}
+
             </div>
           ))}
         </div>
