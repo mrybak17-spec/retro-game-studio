@@ -21,6 +21,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ onClose }) => {
   const [usedSegments, setUsedSegments] = useState<Set<string>>(new Set());
   const [chatMessages, setChatMessages] = useState<{player: string, message: string}[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [pointsPrompt, setPointsPrompt] = useState<{ playerId: string; direction: 'add' | 'subtract' } | null>(null);
+  const [pointsValue, setPointsValue] = useState('');
   
   // Board game state
   const [boardPhase, setBoardPhase] = useState<'phase1' | 'phase2'>('phase1');
