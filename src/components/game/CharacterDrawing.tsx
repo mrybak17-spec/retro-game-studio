@@ -61,6 +61,25 @@ export const CharacterDrawing: React.FC<CharacterDrawingProps> = ({ sessionId, o
   const handleStartPlaying = async () => {
     if (sessionId) {
       await updateSessionStatus(sessionId, 'playing');
+      const { currentSession: sess } = useGameStore.getState();
+      await supabase
+        .from('game_sessions')
+        .update({
+          game_state: {
+            revealedCells: [],
+            currentSlideIndex: 0,
+            showGridAnswer: false,
+            showWheelAnswer: false,
+            showBoardAnswer: false,
+            boardPhase: 'phase1',
+            lastRevealedCellId: null,
+            selectedSegmentId: null,
+            showAnswer: false,
+            showAnswerForSlides: [],
+          },
+          current_game_index: sess?.currentGameIndex ?? 0,
+        })
+        .eq('id', sessionId);
     }
     const { currentSession: sess } = useGameStore.getState();
     if (sess) {

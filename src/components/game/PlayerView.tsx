@@ -65,36 +65,38 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ sessionId, onClose }) =>
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingSubmitted, setDrawingSubmitted] = useState(false);
 
-  // Load initial data
-  useEffect(() => {
-    const load = async () => {
-      const data = await fetchSessionWithPlayers(sessionId);
-      if (data.session) setSession(data.session as any);
-      setPlayers(data.players as any);
-      setLoading(false);
-    };
-    load();
+  const loadSessionData = useCallback(async (keepLoading = false) => {
+    if (!keepLoading) setLoading(true);
+    const data = await fetchSessionWithPlayers(sessionId);
+    if (data.session) setSession(data.session as any);
+    setPlayers((data.players || []) as any);
+    setLoading(false);
   }, [sessionId]);
+
+  // Load initial data + polling fallback when realtime misses an event
+  useEffect(() => {
+    loadSessionData();
+
+    const interval = window.setInterval(() => {
+      loadSessionData(true);
+    }, 1500);
+
+    return () => window.clearInterval(interval);
+  }, [loadSessionData]);
 
   // Subscribe to realtime changes
   useEffect(() => {
     const channel = subscribeToSession(
       sessionId,
-      (payload) => {
-        if (payload.new) setSession(payload.new as any);
+      async () => {
+        await loadSessionData(true);
       },
       async () => {
-        // Refetch players on any change
-        const { data } = await supabase
-          .from('session_players')
-          .select('*')
-          .eq('session_id', sessionId)
-          .order('created_at');
-        if (data) setPlayers(data as any);
+        await loadSessionData(true);
       }
     );
     return () => { supabase.removeChannel(channel); };
-  }, [sessionId]);
+  }, [sessionId, loadSessionData]);
 
   const me = players.find(p => p.player_id === playerId);
   const gameShow = session?.game_show_data as GameShow | undefined;
