@@ -208,6 +208,7 @@ const Index = () => {
         currentSession: { ...currentSession, status: 'drawing' },
       });
     }
+    // Admin skips drawing - goes to waiting screen that monitors players
     setActiveWindow('characterDrawing');
   }, []);
 
