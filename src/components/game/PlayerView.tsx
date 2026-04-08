@@ -227,9 +227,12 @@ export const PlayerView: React.FC<PlayerViewProps> = ({ sessionId, onClose }) =>
   const currentGame = gameShow?.games?.[currentGameIndex];
   const gameState = session.game_state || {};
 
+  // Also check if status just changed to 'playing' from 'drawing'
+  // This ensures players see the game immediately
+
   return (
     <Window
-      title={`${gameShow?.name || 'Game'} - ${currentGame?.name || 'Game Over'}`}
+      title={`${gameShow?.name || 'Game'} - ${session.status === 'ended' ? 'Game Over' : currentGame?.name || 'Game'}`}
       onClose={onClose}
       width={900}
       height={600}

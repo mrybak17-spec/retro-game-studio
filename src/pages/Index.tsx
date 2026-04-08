@@ -208,6 +208,7 @@ const Index = () => {
         currentSession: { ...currentSession, status: 'drawing' },
       });
     }
+    // Admin skips drawing - goes to waiting screen that monitors players
     setActiveWindow('characterDrawing');
   }, []);
 
@@ -422,6 +423,7 @@ const Index = () => {
 
       {activeWindow === 'characterDrawing' && currentSession && (
         <CharacterDrawing
+          sessionId={multiplayerSessionId}
           onComplete={() => setActiveWindow('gamePlayer')}
           onClose={() => {
             setPendingGameShow(null);
