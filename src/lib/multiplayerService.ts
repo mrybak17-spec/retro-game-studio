@@ -61,15 +61,17 @@ export const createMultiplayerSession = async (gameShow: GameShow, hostName: str
 export const joinSession = async (code: string, playerName: string) => {
   const playerId = getLocalPlayerId();
 
-  // Find session
-  const { data: session, error } = await supabase
+  // Find session - get the most recent one with this code that's in lobby status
+  const { data: sessions, error } = await supabase
     .from('game_sessions')
     .select('*')
     .eq('code', code.toUpperCase())
-    .single();
+    .in('status', ['lobby', 'drawing'])
+    .order('created_at', { ascending: false })
+    .limit(1);
 
-  if (error || !session) throw new Error('Game not found. Check your code.');
-  if (session.status !== 'lobby') throw new Error('This game has already started.');
+  if (error || !sessions || sessions.length === 0) throw new Error('Game not found. Check your code.');
+  const session = sessions[0];
 
   // Check player count
   const { count } = await supabase
