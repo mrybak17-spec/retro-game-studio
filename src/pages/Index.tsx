@@ -423,6 +423,7 @@ const Index = () => {
 
       {activeWindow === 'characterDrawing' && currentSession && (
         <CharacterDrawing
+          sessionId={multiplayerSessionId}
           onComplete={() => setActiveWindow('gamePlayer')}
           onClose={() => {
             setPendingGameShow(null);
