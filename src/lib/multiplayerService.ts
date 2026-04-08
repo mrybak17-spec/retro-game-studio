@@ -79,7 +79,7 @@ export const joinSession = async (code: string, playerName: string) => {
     .select('*', { count: 'exact', head: true })
     .eq('session_id', session.id);
 
-  if ((count || 0) >= 5) throw new Error('This game is full (max 5 players).');
+  if (session.status === 'playing' || session.status === 'ended') throw new Error('This game has already started.');
 
   // Check if already joined
   const { data: existing } = await supabase
