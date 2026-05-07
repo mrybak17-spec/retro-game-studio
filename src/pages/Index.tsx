@@ -318,6 +318,7 @@ const Index = () => {
     { id: 'new', icon: <FileText className="w-6 h-6" />, label: 'New Game Show', onClick: () => { resetWizardState(); setActiveWindow('newGameWizard'); } },
     { id: 'games', icon: <FolderOpen className="w-6 h-6" />, label: 'My Games', onClick: () => setActiveWindow('gamesLibrary') },
     { id: 'join', icon: <Gamepad2 className="w-6 h-6" />, label: 'Join Game', onClick: () => setActiveWindow('joinGame') },
+    { id: 'console', icon: <Smartphone className="w-6 h-6" />, label: 'Console', onClick: () => setActiveWindow('console') },
   ];
 
   const taskbarItems = activeWindow
