@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Window, Button, GroupBox, Input } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { GameShow } from '@/types/game';
-import { UserPlus, Trash2, Play, Copy, Users } from 'lucide-react';
+import { UserPlus, Trash2, Play, Copy, Users, Bot } from 'lucide-react';
+import { getBotByIndex } from '@/lib/bots';
 import {
   createMultiplayerSession,
   subscribeToSession,
@@ -78,6 +79,24 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
     const name = newPlayerName.trim() || FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)];
     addFakePlayer(name);
     setNewPlayerName('');
+  };
+
+  const handleAddBot = () => {
+    const { currentSession: sess } = useGameStore.getState();
+    if (!sess) return;
+    const botCount = sess.players.filter(p => p.isFake && p.name.startsWith('Bot ')).length;
+    const bot = getBotByIndex(botCount);
+    // add fake player and set drawing
+    const id = crypto.randomUUID();
+    useGameStore.setState({
+      currentSession: {
+        ...sess,
+        players: [...sess.players, {
+          id, name: bot.name, isHost: false, isFake: true,
+          points: 0, isReady: true, drawing: bot.drawing,
+        }],
+      },
+    });
   };
 
   const handleClose = () => {
@@ -197,6 +216,10 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
             <Button onClick={handleAddFakePlayer} disabled={currentSession.players.length >= 5}>
               <UserPlus className="w-3 h-3 mr-1" />
               Add Test Player
+            </Button>
+            <Button onClick={handleAddBot} disabled={currentSession.players.length >= 5}>
+              <Bot className="w-3 h-3 mr-1" />
+              Add Bot
             </Button>
           </div>
         </GroupBox>

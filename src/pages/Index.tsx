@@ -12,6 +12,7 @@ import {
   CharacterDrawing,
   JoinGame,
   PlayerView,
+  Console,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
@@ -20,6 +21,7 @@ import {
   FileText,
   HelpCircle,
   Gamepad2,
+  Smartphone,
 } from 'lucide-react';
 
 type WindowType = 
@@ -34,6 +36,7 @@ type WindowType =
   | 'gamePlayer'
   | 'joinGame'
   | 'playerView'
+  | 'console'
   | null;
 
 interface DialogState {
@@ -295,6 +298,11 @@ const Index = () => {
       onClick: () => setActiveWindow('joinGame'),
     },
     {
+      icon: <Smartphone className="w-8 h-8 text-pink-300" />,
+      label: 'Console',
+      onClick: () => setActiveWindow('console'),
+    },
+    {
       icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
       label: 'Help',
       onClick: () => setDialog({
@@ -310,6 +318,7 @@ const Index = () => {
     { id: 'new', icon: <FileText className="w-6 h-6" />, label: 'New Game Show', onClick: () => { resetWizardState(); setActiveWindow('newGameWizard'); } },
     { id: 'games', icon: <FolderOpen className="w-6 h-6" />, label: 'My Games', onClick: () => setActiveWindow('gamesLibrary') },
     { id: 'join', icon: <Gamepad2 className="w-6 h-6" />, label: 'Join Game', onClick: () => setActiveWindow('joinGame') },
+    { id: 'console', icon: <Smartphone className="w-6 h-6" />, label: 'Console', onClick: () => setActiveWindow('console') },
   ];
 
   const taskbarItems = activeWindow
@@ -327,6 +336,7 @@ const Index = () => {
           : activeWindow === 'gamePlayer' ? 'Playing...'
           : activeWindow === 'joinGame' ? 'Join Game'
           : activeWindow === 'playerView' ? 'Game (Player)'
+          : activeWindow === 'console' ? 'Console'
           : 'Window',
         active: true,
         onClick: () => {},
@@ -456,6 +466,10 @@ const Index = () => {
           sessionId={multiplayerSessionId}
           onClose={() => { setMultiplayerSessionId(null); setActiveWindow(null); }}
         />
+      )}
+
+      {activeWindow === 'console' && (
+        <Console onClose={() => setActiveWindow(null)} />
       )}
 
       {dialog.show && (

@@ -56,7 +56,7 @@ export const CharacterDrawing: React.FC<CharacterDrawingProps> = ({ sessionId, o
 
   const nonHostPlayers = players.filter((p: any) => !p.is_host);
   const playersWithDrawing = nonHostPlayers.filter((p: any) => p.drawing);
-  const allReady = nonHostPlayers.length > 0 && playersWithDrawing.length === nonHostPlayers.length;
+  const allReady = nonHostPlayers.length === 0 || playersWithDrawing.length === nonHostPlayers.length;
 
   const handleStartPlaying = async () => {
     if (sessionId) {

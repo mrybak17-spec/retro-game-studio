@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GridGame, SlidesGame, WheelGame, BoardGame, BoardCell, Player } from '@/types/game';
 import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle, Volume2 } from 'lucide-react';
 import { updateGameState, updateSessionStatus, updatePlayerPointsDb } from '@/lib/multiplayerService';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GameShowPlayerProps {
   sessionId?: string | null;
@@ -52,6 +53,104 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
     };
     updateGameState(sessionId, state, currentSession?.currentGameIndex).catch(console.error);
   }, [sessionId, revealedCells, currentSlideIndex, showGridAnswer, showWheelAnswer, showBoardAnswer, boardPhase, selectedSegmentIndex, usedSegments, showAnswerForSlide, currentSession]);
+
+  // Remote command listener (from Console / mobile remote)
+  const lastCmdId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!sessionId) return;
+    const channel = supabase
+      .channel(`remote-cmd-${sessionId}`)
+      .on('postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${sessionId}` },
+        (payload) => {
+          const cmd = (payload.new as any)?.game_state?.remoteCommand;
+          if (!cmd || cmd.id === lastCmdId.current) return;
+          lastCmdId.current = cmd.id;
+          handleRemoteCommand(cmd);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, currentSession?.currentGameIndex]);
+
+  const handleRemoteCommand = (cmd: any) => {
+    const sess = useGameStore.getState().currentSession;
+    if (!sess) return;
+    const game = sess.gameShow.games[sess.currentGameIndex];
+    switch (cmd.type) {
+      case 'revealCell': {
+        if (game.type === 'grid') {
+          handleCellClick(cmd.cellId);
+        } else if (game.type === 'board' && boardPhase === 'phase2') {
+          if (!revealedCells.has(cmd.cellId)) {
+            setRevealedCells(new Set([...revealedCells, cmd.cellId]));
+            setRevealedBoardCell(cmd.cellId);
+            setShowBoardAnswer(false);
+          }
+        }
+        break;
+      }
+      case 'revealAnswer': {
+        if (game.type === 'grid') {
+          setShowGridAnswer(true);
+          if (sessionId) updateGameState(sessionId, { revealedCells: Array.from(revealedCells), lastRevealedCellId: Array.from(revealedCells).pop(), showAnswer: true }).catch(console.error);
+        } else if (game.type === 'wheel') {
+          setShowWheelAnswer(true);
+          const seg = (game as WheelGame).segments.filter(s => !usedSegments.has(s.id))[selectedSegmentIndex!];
+          if (sessionId) updateGameState(sessionId, { selectedSegmentId: seg?.id, showAnswer: true }).catch(console.error);
+        } else if (game.type === 'slides') {
+          setShowAnswerForSlide(new Set([...showAnswerForSlide, currentSlideIndex]));
+          if (sessionId) updateGameState(sessionId, { currentSlideIndex, showAnswer: true }).catch(console.error);
+        } else if (game.type === 'board') {
+          setShowBoardAnswer(true);
+          if (sessionId) updateGameState(sessionId, { showAnswer: true, boardPhase: 'phase2' }).catch(console.error);
+        }
+        break;
+      }
+      case 'nextSlide': {
+        if (game.type === 'slides') {
+          const idx = Math.min((game as SlidesGame).slides.length - 1, currentSlideIndex + 1);
+          setCurrentSlideIndex(idx);
+          if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error);
+        }
+        break;
+      }
+      case 'prevSlide': {
+        if (game.type === 'slides') {
+          const idx = Math.max(0, currentSlideIndex - 1);
+          setCurrentSlideIndex(idx);
+          if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error);
+        }
+        break;
+      }
+      case 'spinWheel': {
+        if (game.type === 'wheel') handleSpinWheel();
+        break;
+      }
+      case 'adjustPoints': {
+        updatePlayerPoints(cmd.playerId, cmd.delta);
+        // also sync to DB if non-fake
+        const player = sess.players.find(p => p.id === cmd.playerId);
+        if (player && !player.isFake && sessionId) {
+          updatePlayerPointsDb(sessionId, cmd.playerId, (player.points || 0) + cmd.delta).catch(console.error);
+        }
+        break;
+      }
+      case 'nextGame': {
+        handleNextGame();
+        break;
+      }
+      case 'endPhase1': {
+        if (game.type === 'board') setBoardPhase('phase2');
+        break;
+      }
+      case 'finish': {
+        handleClose();
+        break;
+      }
+    }
+  };
 
   if (!currentSession) {
     return null;
