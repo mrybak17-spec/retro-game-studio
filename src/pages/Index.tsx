@@ -12,6 +12,7 @@ import {
   CharacterDrawing,
   JoinGame,
   PlayerView,
+  Console,
 } from '@/components/game';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
@@ -20,6 +21,7 @@ import {
   FileText,
   HelpCircle,
   Gamepad2,
+  Smartphone,
 } from 'lucide-react';
 
 type WindowType = 
