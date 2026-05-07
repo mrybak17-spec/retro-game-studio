@@ -336,6 +336,7 @@ const Index = () => {
           : activeWindow === 'gamePlayer' ? 'Playing...'
           : activeWindow === 'joinGame' ? 'Join Game'
           : activeWindow === 'playerView' ? 'Game (Player)'
+          : activeWindow === 'console' ? 'Console'
           : 'Window',
         active: true,
         onClick: () => {},
