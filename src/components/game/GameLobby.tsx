@@ -217,6 +217,10 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
               <UserPlus className="w-3 h-3 mr-1" />
               Add Test Player
             </Button>
+            <Button onClick={handleAddBot} disabled={currentSession.players.length >= 5}>
+              <Bot className="w-3 h-3 mr-1" />
+              Add Bot
+            </Button>
           </div>
         </GroupBox>
 
