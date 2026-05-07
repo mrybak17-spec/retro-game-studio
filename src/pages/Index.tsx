@@ -468,6 +468,10 @@ const Index = () => {
         />
       )}
 
+      {activeWindow === 'console' && (
+        <Console onClose={() => setActiveWindow(null)} />
+      )}
+
       {dialog.show && (
         <Dialog
           title={dialog.title}
