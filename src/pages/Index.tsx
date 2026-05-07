@@ -298,6 +298,11 @@ const Index = () => {
       onClick: () => setActiveWindow('joinGame'),
     },
     {
+      icon: <Smartphone className="w-8 h-8 text-pink-300" />,
+      label: 'Console',
+      onClick: () => setActiveWindow('console'),
+    },
+    {
       icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
       label: 'Help',
       onClick: () => setDialog({
