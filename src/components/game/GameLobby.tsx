@@ -81,6 +81,24 @@ export const GameLobby: React.FC<GameLobbyProps> = ({ gameShow, onClose, onStart
     setNewPlayerName('');
   };
 
+  const handleAddBot = () => {
+    const { currentSession: sess } = useGameStore.getState();
+    if (!sess) return;
+    const botCount = sess.players.filter(p => p.isFake && p.name.startsWith('Bot ')).length;
+    const bot = getBotByIndex(botCount);
+    // add fake player and set drawing
+    const id = crypto.randomUUID();
+    useGameStore.setState({
+      currentSession: {
+        ...sess,
+        players: [...sess.players, {
+          id, name: bot.name, isHost: false, isFake: true,
+          points: 0, isReady: true, drawing: bot.drawing,
+        }],
+      },
+    });
+  };
+
   const handleClose = () => {
     if (dbSessionId) {
       deleteSession(dbSessionId).catch(console.error);
