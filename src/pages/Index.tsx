@@ -36,6 +36,7 @@ type WindowType =
   | 'gamePlayer'
   | 'joinGame'
   | 'playerView'
+  | 'console'
   | null;
 
 interface DialogState {
