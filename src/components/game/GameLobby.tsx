@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Window, Button, GroupBox, Input } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { GameShow } from '@/types/game';
-import { UserPlus, Trash2, Play, Copy, Users } from 'lucide-react';
+import { UserPlus, Trash2, Play, Copy, Users, Bot } from 'lucide-react';
+import { getBotByIndex } from '@/lib/bots';
 import {
   createMultiplayerSession,
   subscribeToSession,
