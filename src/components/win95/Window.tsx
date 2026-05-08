@@ -244,7 +244,7 @@ export const Window: React.FC<WindowProps> = ({
       )}
 
       {/* Resize Handles */}
-      {resizable && !isMaximized && (
+      {resizable && !fullscreen && (
         <>
           <div
             className="absolute top-0 left-2 right-2 h-1 cursor-n-resize"
