@@ -157,13 +157,12 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
       case 'board': {
         const g = currentGame as BoardGame;
         const phase = gameState.boardPhase || 'phase1';
+        const cells = (gameState.boardCells as any) || g.cells; // host syncs in phase2
         return (
           <div className="flex flex-col gap-2">
             <div className="text-xs font-bold">Board ({phase})</div>
             {phase === 'phase1' ? (
-              <div className="text-xs text-muted-foreground">
-                Phase 1 setup must be done from the host. Use console for Phase 2.
-              </div>
+              <BoardPhase1Controls game={g} sid={sid} send={send} />
             ) : (
               <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${g.columns}, 1fr)` }}>
                 {g.cells.flat().map(cell => {
