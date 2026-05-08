@@ -157,13 +157,12 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
       case 'board': {
         const g = currentGame as BoardGame;
         const phase = gameState.boardPhase || 'phase1';
+        const cells = (gameState.boardCells as any) || g.cells; // host syncs in phase2
         return (
           <div className="flex flex-col gap-2">
             <div className="text-xs font-bold">Board ({phase})</div>
             {phase === 'phase1' ? (
-              <div className="text-xs text-muted-foreground">
-                Phase 1 setup must be done from the host. Use console for Phase 2.
-              </div>
+              <BoardPhase1Controls game={g} sid={sid} send={send} />
             ) : (
               <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${g.columns}, 1fr)` }}>
                 {g.cells.flat().map(cell => {
@@ -220,12 +219,16 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
             {players.filter(p => !p.is_host).map(p => (
               <PlayerScoreRow key={p.id} player={p} onAdjust={(delta) => send({ type: 'adjustPoints', playerId: p.player_id, delta })} />
             ))}
-            {players.filter(p => !p.is_host).length === 0 && (
-              <div className="text-xs text-muted-foreground">No players (only bots/fake on host).</div>
+            {(gameState.fakePlayers || []).map((p: any) => (
+              <PlayerScoreRow
+                key={p.id}
+                player={{ name: `${p.name} (bot)`, points: p.points, drawing: p.drawing }}
+                onAdjust={(delta) => send({ type: 'adjustPoints', playerId: p.id, delta })}
+              />
+            ))}
+            {players.filter(p => !p.is_host).length === 0 && (gameState.fakePlayers || []).length === 0 && (
+              <div className="text-xs text-muted-foreground">No players yet.</div>
             )}
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            Note: Bot/test players appear only on the host screen. Score them via +/- shown there.
           </div>
         </GroupBox>
 
@@ -283,6 +286,79 @@ const PlayerScoreRow: React.FC<{ player: any; onAdjust: (delta: number) => void 
           <Button onClick={() => setShowInput(null)}><X className="w-3 h-3" /></Button>
         </div>
       )}
+    </div>
+  );
+};
+
+const BoardPhase1Controls: React.FC<{ game: BoardGame; sid: string; send: (cmd: any) => void }> = ({ game, send }) => {
+  const [pickedColor, setPickedColor] = useState<string | null>(null);
+  const [pickedPoints, setPickedPoints] = useState<number | null>(null);
+
+  const onCellTap = (cellId: string) => {
+    if (pickedColor) {
+      send({ type: 'assignBoardColor', cellId, color: pickedColor });
+    } else if (pickedPoints !== null) {
+      send({ type: 'assignBoardPoints', cellId, points: pickedPoints });
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-xs">Pick a color or points value, then tap a card.</div>
+      <div className="flex gap-1">
+        {[game.teamColor1, game.teamColor2].map((c, i) => (
+          <button
+            key={c}
+            className="win95-raised text-xs font-bold p-2 flex-1"
+            style={{
+              backgroundColor: c,
+              color: '#fff',
+              outline: pickedColor === c ? '3px solid #ffeb3b' : 'none',
+              minHeight: 40,
+            }}
+            onClick={() => { setPickedColor(c); setPickedPoints(null); }}
+          >
+            Team {i + 1}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {game.pointValues.map(v => (
+          <button
+            key={v}
+            className="win95-raised text-xs font-bold p-2"
+            style={{
+              outline: pickedPoints === v ? '3px solid #ffeb3b' : 'none',
+              minHeight: 40,
+            }}
+            onClick={() => { setPickedPoints(v); setPickedColor(null); }}
+          >
+            {v} pts
+          </button>
+        ))}
+      </div>
+      <div
+        className="grid gap-1"
+        style={{ gridTemplateColumns: `repeat(${game.columns}, 1fr)` }}
+      >
+        {game.cells.flat().map(cell => (
+          <button
+            key={cell.id}
+            className="win95-raised text-xs font-bold p-2"
+            style={{
+              backgroundColor: cell.teamColor || '#c6c6c6',
+              color: cell.teamColor ? '#fff' : '#000',
+              minHeight: 44,
+            }}
+            onClick={() => onCellTap(cell.id)}
+            disabled={!pickedColor && pickedPoints === null}
+          >
+            <div className="truncate">{cell.displayText}</div>
+            {cell.points ? <div className="text-[10px] opacity-80">{cell.points} pts</div> : null}
+          </button>
+        ))}
+      </div>
+      <Button onClick={() => send({ type: 'endPhase1' })}>End Phase 1 →</Button>
     </div>
   );
 };

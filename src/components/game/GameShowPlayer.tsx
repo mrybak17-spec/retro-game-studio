@@ -3,7 +3,7 @@ import { Window, Button, GroupBox } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GridGame, SlidesGame, WheelGame, BoardGame, BoardCell, Player } from '@/types/game';
 import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle, Volume2 } from 'lucide-react';
-import { updateGameState, updateSessionStatus, updatePlayerPointsDb } from '@/lib/multiplayerService';
+import { updateGameState, updateSessionStatus, updatePlayerPointsDb, mergeGameState } from '@/lib/multiplayerService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GameShowPlayerProps {
@@ -54,6 +54,28 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
     updateGameState(sessionId, state, currentSession?.currentGameIndex).catch(console.error);
   }, [sessionId, revealedCells, currentSlideIndex, showGridAnswer, showWheelAnswer, showBoardAnswer, boardPhase, selectedSegmentIndex, usedSegments, showAnswerForSlide, currentSession]);
 
+  // Latest-state refs so remote command handler always reads fresh values
+  const stateRef = useRef({
+    revealedCells,
+    currentSlideIndex,
+    showAnswerForSlide,
+    usedSegments,
+    selectedSegmentIndex,
+    boardPhase,
+    boardCells,
+  });
+  useEffect(() => {
+    stateRef.current = {
+      revealedCells,
+      currentSlideIndex,
+      showAnswerForSlide,
+      usedSegments,
+      selectedSegmentIndex,
+      boardPhase,
+      boardCells,
+    };
+  });
+
   // Remote command listener (from Console / mobile remote)
   const lastCmdId = useRef<string | null>(null);
   useEffect(() => {
@@ -72,36 +94,51 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
       .subscribe();
     return () => { supabase.removeChannel(channel); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, currentSession?.currentGameIndex]);
+  }, [sessionId]);
 
   const handleRemoteCommand = (cmd: any) => {
     const sess = useGameStore.getState().currentSession;
     if (!sess) return;
     const game = sess.gameShow.games[sess.currentGameIndex];
+    const s = stateRef.current;
     switch (cmd.type) {
       case 'revealCell': {
         if (game.type === 'grid') {
-          handleCellClick(cmd.cellId);
-        } else if (game.type === 'board' && boardPhase === 'phase2') {
-          if (!revealedCells.has(cmd.cellId)) {
-            setRevealedCells(new Set([...revealedCells, cmd.cellId]));
-            setRevealedBoardCell(cmd.cellId);
-            setShowBoardAnswer(false);
-          }
+          if (s.revealedCells.has(cmd.cellId)) return;
+          const newRevealed = new Set([...s.revealedCells, cmd.cellId]);
+          setRevealedCells(newRevealed);
+          setShowGridAnswer(false);
+          if (sessionId) updateGameState(sessionId, {
+            revealedCells: Array.from(newRevealed),
+            lastRevealedCellId: cmd.cellId,
+            showAnswer: false,
+          }).catch(console.error);
+        } else if (game.type === 'board' && s.boardPhase === 'phase2') {
+          if (s.revealedCells.has(cmd.cellId)) return;
+          const newRevealed = new Set([...s.revealedCells, cmd.cellId]);
+          setRevealedCells(newRevealed);
+          setRevealedBoardCell(cmd.cellId);
+          setShowBoardAnswer(false);
+          if (sessionId) updateGameState(sessionId, {
+            revealedCells: Array.from(newRevealed),
+            lastRevealedCellId: cmd.cellId,
+            showAnswer: false,
+            boardPhase: 'phase2',
+          }).catch(console.error);
         }
         break;
       }
       case 'revealAnswer': {
         if (game.type === 'grid') {
           setShowGridAnswer(true);
-          if (sessionId) updateGameState(sessionId, { revealedCells: Array.from(revealedCells), lastRevealedCellId: Array.from(revealedCells).pop(), showAnswer: true }).catch(console.error);
+          if (sessionId) updateGameState(sessionId, { revealedCells: Array.from(s.revealedCells), lastRevealedCellId: Array.from(s.revealedCells).pop(), showAnswer: true }).catch(console.error);
         } else if (game.type === 'wheel') {
           setShowWheelAnswer(true);
-          const seg = (game as WheelGame).segments.filter(s => !usedSegments.has(s.id))[selectedSegmentIndex!];
+          const seg = (game as WheelGame).segments.filter(x => !s.usedSegments.has(x.id))[s.selectedSegmentIndex!];
           if (sessionId) updateGameState(sessionId, { selectedSegmentId: seg?.id, showAnswer: true }).catch(console.error);
         } else if (game.type === 'slides') {
-          setShowAnswerForSlide(new Set([...showAnswerForSlide, currentSlideIndex]));
-          if (sessionId) updateGameState(sessionId, { currentSlideIndex, showAnswer: true }).catch(console.error);
+          setShowAnswerForSlide(new Set([...s.showAnswerForSlide, s.currentSlideIndex]));
+          if (sessionId) updateGameState(sessionId, { currentSlideIndex: s.currentSlideIndex, showAnswer: true }).catch(console.error);
         } else if (game.type === 'board') {
           setShowBoardAnswer(true);
           if (sessionId) updateGameState(sessionId, { showAnswer: true, boardPhase: 'phase2' }).catch(console.error);
@@ -110,7 +147,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
       }
       case 'nextSlide': {
         if (game.type === 'slides') {
-          const idx = Math.min((game as SlidesGame).slides.length - 1, currentSlideIndex + 1);
+          const idx = Math.min((game as SlidesGame).slides.length - 1, s.currentSlideIndex + 1);
           setCurrentSlideIndex(idx);
           if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error);
         }
@@ -118,7 +155,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
       }
       case 'prevSlide': {
         if (game.type === 'slides') {
-          const idx = Math.max(0, currentSlideIndex - 1);
+          const idx = Math.max(0, s.currentSlideIndex - 1);
           setCurrentSlideIndex(idx);
           if (sessionId) updateGameState(sessionId, { currentSlideIndex: idx, showAnswer: false }).catch(console.error);
         }
@@ -130,10 +167,29 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
       }
       case 'adjustPoints': {
         updatePlayerPoints(cmd.playerId, cmd.delta);
-        // also sync to DB if non-fake
         const player = sess.players.find(p => p.id === cmd.playerId);
         if (player && !player.isFake && sessionId) {
           updatePlayerPointsDb(sessionId, cmd.playerId, (player.points || 0) + cmd.delta).catch(console.error);
+        }
+        break;
+      }
+      case 'assignBoardColor': {
+        if (game.type === 'board' && s.boardPhase === 'phase1') {
+          const base = s.boardCells || (game as BoardGame).cells;
+          const newCells = base.map(r => r.map(c =>
+            c.id === cmd.cellId ? { ...c, teamColor: cmd.color } : { ...c }
+          ));
+          setBoardCells(newCells);
+        }
+        break;
+      }
+      case 'assignBoardPoints': {
+        if (game.type === 'board' && s.boardPhase === 'phase1') {
+          const base = s.boardCells || (game as BoardGame).cells;
+          const newCells = base.map(r => r.map(c =>
+            c.id === cmd.cellId ? { ...c, points: cmd.points } : { ...c }
+          ));
+          setBoardCells(newCells);
         }
         break;
       }
@@ -160,6 +216,20 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const currentGame = gameShow.games[currentGameIndex];
   const nonHostPlayers = players.filter(p => !p.isHost);
   const host = players.find(p => p.isHost);
+
+  // Sync fake/bot players to game_state so the Console (mobile remote) can score them
+  useEffect(() => {
+    if (!sessionId) return;
+    const fakeRoster = players.filter(p => !p.isHost && p.isFake).map(p => ({
+      id: p.id,
+      name: p.name,
+      points: p.points,
+      drawing: p.drawing || null,
+      isFake: true,
+    }));
+    mergeGameState(sessionId, { fakePlayers: fakeRoster }).catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, JSON.stringify(players.filter(p => !p.isHost && p.isFake).map(p => ({ id: p.id, points: p.points, name: p.name })))]);
 
   const handleClose = () => {
     if (sessionId) {

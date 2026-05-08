@@ -48,6 +48,20 @@ export const Window: React.FC<WindowProps> = ({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isMaximized, setIsMaximized] = useState(false);
   const [preMaxState, setPreMaxState] = useState({ position, size });
+  const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  const [vp, setVp] = useState(() => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 1024,
+    h: typeof window !== 'undefined' ? window.innerHeight : 768,
+  }));
+
+  useEffect(() => {
+    const onResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setVp({ w: window.innerWidth, h: window.innerHeight });
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
   
   const windowRef = useRef<HTMLDivElement>(null);
   const resizeStart = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
@@ -109,7 +123,7 @@ export const Window: React.FC<WindowProps> = ({
   }, [isDragging, isResizing, dragOffset, isMaximized, minWidth, minHeight]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (draggable && !isMaximized) {
+    if (draggable && !isMaximized && !isMobile) {
       setIsDragging(true);
       setDragOffset({
         x: e.clientX - position.x,
@@ -145,9 +159,10 @@ export const Window: React.FC<WindowProps> = ({
     onMaximize?.();
   };
 
-  const actualPos = isMaximized ? { x: 0, y: 0 } : position;
-  const actualSize = isMaximized 
-    ? { width: window.innerWidth, height: window.innerHeight - 40 } 
+  const fullscreen = isMobile || isMaximized;
+  const actualPos = fullscreen ? { x: 0, y: 0 } : position;
+  const actualSize = fullscreen
+    ? { width: vp.w, height: vp.h - 28 }
     : size;
 
   return (
@@ -229,7 +244,7 @@ export const Window: React.FC<WindowProps> = ({
       )}
 
       {/* Resize Handles */}
-      {resizable && !isMaximized && (
+      {resizable && !fullscreen && (
         <>
           <div
             className="absolute top-0 left-2 right-2 h-1 cursor-n-resize"

@@ -130,6 +130,20 @@ export const updateGameState = async (sessionId: string, gameState: any, current
     .eq('id', sessionId);
 };
 
+// ─── Merge fields into existing game_state (preserves other keys) ───
+export const mergeGameState = async (sessionId: string, partial: any) => {
+  const { data } = await supabase
+    .from('game_sessions')
+    .select('game_state')
+    .eq('id', sessionId)
+    .single();
+  const merged = { ...((data?.game_state as any) || {}), ...partial };
+  await supabase
+    .from('game_sessions')
+    .update({ game_state: merged })
+    .eq('id', sessionId);
+};
+
 // ─── Update player drawing ───
 export const updatePlayerDrawing = async (sessionId: string, playerId: string, drawing: string) => {
   await supabase
