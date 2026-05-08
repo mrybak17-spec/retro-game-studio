@@ -3,7 +3,7 @@ import { Window, Button, GroupBox } from '@/components/win95';
 import { useGameStore } from '@/store/gameStore';
 import { Game, GridGame, SlidesGame, WheelGame, BoardGame, BoardCell, Player } from '@/types/game';
 import { Plus, Minus, ChevronLeft, ChevronRight, RotateCcw, X, MessageCircle, Volume2 } from 'lucide-react';
-import { updateGameState, updateSessionStatus, updatePlayerPointsDb } from '@/lib/multiplayerService';
+import { updateGameState, updateSessionStatus, updatePlayerPointsDb, mergeGameState } from '@/lib/multiplayerService';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GameShowPlayerProps {
