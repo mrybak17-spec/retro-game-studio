@@ -123,7 +123,7 @@ export const Window: React.FC<WindowProps> = ({
   }, [isDragging, isResizing, dragOffset, isMaximized, minWidth, minHeight]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (draggable && !isMaximized) {
+    if (draggable && !isMaximized && !isMobile) {
       setIsDragging(true);
       setDragOffset({
         x: e.clientX - position.x,
