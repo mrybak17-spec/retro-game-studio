@@ -289,3 +289,76 @@ const PlayerScoreRow: React.FC<{ player: any; onAdjust: (delta: number) => void 
     </div>
   );
 };
+
+const BoardPhase1Controls: React.FC<{ game: BoardGame; sid: string; send: (cmd: any) => void }> = ({ game, send }) => {
+  const [pickedColor, setPickedColor] = useState<string | null>(null);
+  const [pickedPoints, setPickedPoints] = useState<number | null>(null);
+
+  const onCellTap = (cellId: string) => {
+    if (pickedColor) {
+      send({ type: 'assignBoardColor', cellId, color: pickedColor });
+    } else if (pickedPoints !== null) {
+      send({ type: 'assignBoardPoints', cellId, points: pickedPoints });
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="text-xs">Pick a color or points value, then tap a card.</div>
+      <div className="flex gap-1">
+        {[game.teamColor1, game.teamColor2].map((c, i) => (
+          <button
+            key={c}
+            className="win95-raised text-xs font-bold p-2 flex-1"
+            style={{
+              backgroundColor: c,
+              color: '#fff',
+              outline: pickedColor === c ? '3px solid #ffeb3b' : 'none',
+              minHeight: 40,
+            }}
+            onClick={() => { setPickedColor(c); setPickedPoints(null); }}
+          >
+            Team {i + 1}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {game.pointValues.map(v => (
+          <button
+            key={v}
+            className="win95-raised text-xs font-bold p-2"
+            style={{
+              outline: pickedPoints === v ? '3px solid #ffeb3b' : 'none',
+              minHeight: 40,
+            }}
+            onClick={() => { setPickedPoints(v); setPickedColor(null); }}
+          >
+            {v} pts
+          </button>
+        ))}
+      </div>
+      <div
+        className="grid gap-1"
+        style={{ gridTemplateColumns: `repeat(${game.columns}, 1fr)` }}
+      >
+        {game.cells.flat().map(cell => (
+          <button
+            key={cell.id}
+            className="win95-raised text-xs font-bold p-2"
+            style={{
+              backgroundColor: cell.teamColor || '#c6c6c6',
+              color: cell.teamColor ? '#fff' : '#000',
+              minHeight: 44,
+            }}
+            onClick={() => onCellTap(cell.id)}
+            disabled={!pickedColor && pickedPoints === null}
+          >
+            <div className="truncate">{cell.displayText}</div>
+            {cell.points ? <div className="text-[10px] opacity-80">{cell.points} pts</div> : null}
+          </button>
+        ))}
+      </div>
+      <Button onClick={() => send({ type: 'endPhase1' })}>End Phase 1 →</Button>
+    </div>
+  );
+};
