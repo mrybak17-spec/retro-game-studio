@@ -159,9 +159,10 @@ export const Window: React.FC<WindowProps> = ({
     onMaximize?.();
   };
 
-  const actualPos = isMaximized ? { x: 0, y: 0 } : position;
-  const actualSize = isMaximized 
-    ? { width: window.innerWidth, height: window.innerHeight - 40 } 
+  const fullscreen = isMobile || isMaximized;
+  const actualPos = fullscreen ? { x: 0, y: 0 } : position;
+  const actualSize = fullscreen
+    ? { width: vp.w, height: vp.h - 28 }
     : size;
 
   return (
