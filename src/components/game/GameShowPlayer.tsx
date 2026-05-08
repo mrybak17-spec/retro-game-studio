@@ -217,6 +217,20 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const nonHostPlayers = players.filter(p => !p.isHost);
   const host = players.find(p => p.isHost);
 
+  // Sync fake/bot players to game_state so the Console (mobile remote) can score them
+  useEffect(() => {
+    if (!sessionId) return;
+    const fakeRoster = players.filter(p => !p.isHost && p.isFake).map(p => ({
+      id: p.id,
+      name: p.name,
+      points: p.points,
+      drawing: p.drawing || null,
+      isFake: true,
+    }));
+    updateGameState(sessionId, { fakePlayers: fakeRoster }).catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, JSON.stringify(players.filter(p => !p.isHost && p.isFake).map(p => ({ id: p.id, points: p.points, name: p.name })))]);
+
   const handleClose = () => {
     if (sessionId) {
       updateSessionStatus(sessionId, 'ended').catch(console.error);
