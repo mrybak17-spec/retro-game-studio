@@ -219,12 +219,16 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
             {players.filter(p => !p.is_host).map(p => (
               <PlayerScoreRow key={p.id} player={p} onAdjust={(delta) => send({ type: 'adjustPoints', playerId: p.player_id, delta })} />
             ))}
-            {players.filter(p => !p.is_host).length === 0 && (
-              <div className="text-xs text-muted-foreground">No players (only bots/fake on host).</div>
+            {(gameState.fakePlayers || []).map((p: any) => (
+              <PlayerScoreRow
+                key={p.id}
+                player={{ name: `${p.name} (bot)`, points: p.points, drawing: p.drawing }}
+                onAdjust={(delta) => send({ type: 'adjustPoints', playerId: p.id, delta })}
+              />
+            ))}
+            {players.filter(p => !p.is_host).length === 0 && (gameState.fakePlayers || []).length === 0 && (
+              <div className="text-xs text-muted-foreground">No players yet.</div>
             )}
-          </div>
-          <div className="text-xs text-muted-foreground mt-2">
-            Note: Bot/test players appear only on the host screen. Score them via +/- shown there.
           </div>
         </GroupBox>
 
