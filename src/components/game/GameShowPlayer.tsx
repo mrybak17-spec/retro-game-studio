@@ -227,7 +227,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
       drawing: p.drawing || null,
       isFake: true,
     }));
-    updateGameState(sessionId, { fakePlayers: fakeRoster }).catch(console.error);
+    mergeGameState(sessionId, { fakePlayers: fakeRoster }).catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId, JSON.stringify(players.filter(p => !p.isHost && p.isFake).map(p => ({ id: p.id, points: p.points, name: p.name })))]);
 
