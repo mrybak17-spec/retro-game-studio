@@ -157,25 +157,30 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
       case 'board': {
         const g = currentGame as BoardGame;
         const phase = gameState.boardPhase || 'phase1';
-        const cells = (gameState.boardCells as any) || g.cells; // host syncs in phase2
+        const syncedCells = (gameState.boardCells as any[][]) || g.cells;
+        const flatCells = syncedCells.flat();
         return (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 w-full min-w-0">
             <div className="text-xs font-bold">Board ({phase})</div>
             {phase === 'phase1' ? (
-              <BoardPhase1Controls game={g} sid={sid} send={send} />
+              <BoardPhase1Controls game={g} cells={syncedCells} sid={sid} send={send} />
             ) : (
-              <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${g.columns}, 1fr)` }}>
-                {g.cells.flat().map(cell => {
+              <div
+                className="grid gap-1 w-full"
+                style={{ gridTemplateColumns: `repeat(${g.columns}, minmax(0, 1fr))` }}
+              >
+                {flatCells.map(cell => {
                   const r = revealed.has(cell.id);
                   return (
                     <button
                       key={cell.id}
-                      className="win95-raised text-xs font-bold p-2"
+                      className="win95-raised text-[10px] font-bold p-1 min-w-0 overflow-hidden"
                       style={{ backgroundColor: r ? '#666' : (cell.teamColor || '#c6c6c6'), color: '#fff', minHeight: 44 }}
                       onClick={() => send({ type: 'revealCell', cellId: cell.id })}
                       disabled={r}
                     >
-                      {r ? '✓' : cell.displayText}
+                      <div className="truncate">{r ? '✓' : cell.displayText}</div>
+                      {cell.points ? <div className="text-[9px] opacity-80">{cell.points}</div> : null}
                     </button>
                   );
                 })}
