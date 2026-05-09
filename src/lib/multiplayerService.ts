@@ -26,6 +26,13 @@ export const createMultiplayerSession = async (gameShow: GameShow, hostName: str
   const hostId = getLocalPlayerId();
   const code = generateCode();
 
+  // Mark any older sessions with the same code as ended so the Console / players never connect to a stale one.
+  await supabase
+    .from('game_sessions')
+    .update({ status: 'ended' })
+    .eq('code', code)
+    .neq('status', 'ended');
+
   const { data: session, error } = await supabase
     .from('game_sessions')
     .insert({
