@@ -120,9 +120,15 @@ export const updateSessionStatus = async (sessionId: string, status: string) => 
     .eq('id', sessionId);
 };
 
-// ─── Update game state (current game index, revealed cells, etc.) ───
+// ─── Update game state (merges into existing game_state, preserves other keys) ───
 export const updateGameState = async (sessionId: string, gameState: any, currentGameIndex?: number) => {
-  const update: any = { game_state: gameState };
+  const { data } = await supabase
+    .from('game_sessions')
+    .select('game_state')
+    .eq('id', sessionId)
+    .single();
+  const merged = { ...((data?.game_state as any) || {}), ...gameState };
+  const update: any = { game_state: merged };
   if (currentGameIndex !== undefined) update.current_game_index = currentGameIndex;
   await supabase
     .from('game_sessions')
