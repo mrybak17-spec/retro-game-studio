@@ -251,10 +251,24 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
     setBoardCells(null);
     setRevealedBoardCell(null);
     setShowBoardAnswer(false);
+    // Read fresh index from store to avoid stale closure inside remote-command handler
+    const freshSession = useGameStore.getState().currentSession;
+    const nextIdx = (freshSession?.currentGameIndex ?? 0) + 1;
     advanceToNextGame();
     if (sessionId) {
-      const nextIdx = (currentSession?.currentGameIndex || 0) + 1;
-      updateGameState(sessionId, { revealedCells: [], showAnswer: false, currentSlideIndex: 0 }, nextIdx).catch(console.error);
+      const fakeRoster = (freshSession?.players || [])
+        .filter(p => !p.isHost && p.isFake)
+        .map(p => ({ id: p.id, name: p.name, points: p.points, drawing: p.drawing || null, isFake: true }));
+      mergeGameState(sessionId, {
+        revealedCells: [],
+        showAnswer: false,
+        currentSlideIndex: 0,
+        showAnswerForSlides: [],
+        boardPhase: 'phase1',
+        lastRevealedCellId: null,
+        selectedSegmentId: null,
+        fakePlayers: fakeRoster,
+      }, nextIdx).catch(console.error);
     }
   };
 
