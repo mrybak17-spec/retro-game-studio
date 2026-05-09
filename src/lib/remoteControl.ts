@@ -14,14 +14,26 @@ export const sendRemoteCommand = async (sessionId: string, command: any) => {
 };
 
 export const fetchSessionByCodeAny = async (code: string) => {
+  // Prefer active sessions (not ended). Among those, take the newest.
   const { data: sessions } = await supabase
     .from('game_sessions')
     .select('*')
     .eq('code', code.toUpperCase())
+    .in('status', ['lobby', 'drawing', 'playing'])
     .order('created_at', { ascending: false })
     .limit(1);
-  if (!sessions || sessions.length === 0) return null;
-  const session = sessions[0];
+  let session = sessions && sessions[0];
+  if (!session) {
+    // Fallback: maybe the host hasn't transitioned status yet — try any session, newest first
+    const { data: any } = await supabase
+      .from('game_sessions')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .order('created_at', { ascending: false })
+      .limit(1);
+    session = any && any[0];
+  }
+  if (!session) return null;
   const { data: players } = await supabase
     .from('session_players')
     .select('*')
