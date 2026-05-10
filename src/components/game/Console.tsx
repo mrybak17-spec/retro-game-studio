@@ -166,7 +166,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
               <BoardPhase1Controls game={g} cells={syncedCells} sid={sid} send={send} />
             ) : (
               <div
-                className="grid gap-1 w-full"
+                className="grid gap-1 w-full min-w-0"
                 style={{ gridTemplateColumns: `repeat(${g.columns}, minmax(0, 1fr))` }}
               >
                 {flatCells.map(cell => {
@@ -174,13 +174,13 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                   return (
                     <button
                       key={cell.id}
-                      className="win95-raised text-[10px] font-bold p-1 min-w-0 overflow-hidden"
-                      style={{ backgroundColor: r ? '#666' : (cell.teamColor || '#c6c6c6'), color: '#fff', minHeight: 44 }}
+                      className="win95-raised text-[9px] font-bold p-1 min-w-0 overflow-hidden leading-tight"
+                      style={{ backgroundColor: r ? '#666' : (cell.teamColor || '#c6c6c6'), color: '#fff', minHeight: 40, wordBreak: 'break-word' }}
                       onClick={() => send({ type: 'revealCell', cellId: cell.id })}
                       disabled={r}
                     >
-                      <div className="truncate">{r ? '✓' : cell.displayText}</div>
-                      {cell.points ? <div className="text-[9px] opacity-80">{cell.points}</div> : null}
+                      <div className="break-words">{r ? '✓' : cell.displayText}</div>
+                      {cell.points ? <div className="text-[8px] opacity-80">{cell.points}</div> : null}
                     </button>
                   );
                 })}
