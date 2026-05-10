@@ -205,7 +205,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
       resizable
       initialPosition={{ x: 458, y: 50 }}
     >
-      <div className="p-2 flex flex-col gap-2 h-full overflow-y-auto bg-window">
+      <div className="p-2 flex flex-col gap-2 h-full overflow-y-auto overflow-x-hidden bg-window w-full max-w-full min-w-0">
         {/* Pilot header */}
         <div className="win95-inset p-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
