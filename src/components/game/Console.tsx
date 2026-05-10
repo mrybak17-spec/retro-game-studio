@@ -358,23 +358,24 @@ const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: stri
 
       <div className="text-[10px] font-bold uppercase">Board</div>
       <div
-        className="grid gap-1 w-full"
+        className="grid gap-1 w-full min-w-0"
         style={{ gridTemplateColumns: `repeat(${game.columns}, minmax(0, 1fr))` }}
       >
         {flatCells.map(cell => (
           <button
             key={cell.id}
-            className="win95-raised text-[10px] font-bold p-1 min-w-0 overflow-hidden"
+            className="win95-raised text-[9px] font-bold p-1 min-w-0 overflow-hidden leading-tight"
             style={{
               backgroundColor: cell.teamColor || '#c6c6c6',
               color: cell.teamColor ? '#fff' : '#000',
-              minHeight: 44,
+              minHeight: 40,
+              wordBreak: 'break-word',
             }}
             onClick={() => onCellTap(cell.id)}
             disabled={!pickedColor && pickedPoints === null}
           >
-            <div className="truncate">{cell.displayText}</div>
-            {cell.points ? <div className="text-[9px] opacity-80">{cell.points}</div> : null}
+            <div className="break-words">{cell.displayText}</div>
+            {cell.points ? <div className="text-[8px] opacity-80">{cell.points}</div> : null}
           </button>
         ))}
       </div>
