@@ -467,7 +467,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                 <img
                   src={lastCell.imageUrl}
                   alt="Question"
-                  className="max-w-full max-h-32 object-contain mx-auto border border-window-border-dark"
+                  className="max-w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark"
                 />
               </div>
             )}
@@ -512,7 +512,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             <img
               src={slide.imageUrl}
               alt="Slide"
-              className="max-w-full max-h-48 object-contain mb-4"
+              className="max-w-full max-h-[70vh] object-contain mb-4"
             />
           )}
           <p className="text-center font-pixel text-xl">
@@ -877,7 +877,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
           <div className="win95-inset p-3 mt-2">
             {lastRevealedCell.imageUrl && (
               <div className="mb-2">
-                <img src={lastRevealedCell.imageUrl} alt="Question" className="max-w-full max-h-32 object-contain mx-auto border border-window-border-dark" />
+                <img src={lastRevealedCell.imageUrl} alt="Question" className="max-w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark" />
               </div>
             )}
             {lastRevealedCell.audioUrl && (
