@@ -512,7 +512,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             <img
               src={slide.imageUrl}
               alt="Slide"
-              className="max-w-full max-h-48 object-contain mb-4"
+              className="max-w-full max-h-[70vh] object-contain mb-4"
             />
           )}
           <p className="text-center font-pixel text-xl">
