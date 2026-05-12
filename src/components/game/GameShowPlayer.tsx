@@ -467,7 +467,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                 <img
                   src={lastCell.imageUrl}
                   alt="Question"
-                  className="max-w-full max-h-32 object-contain mx-auto border border-window-border-dark"
+                  className="max-w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark"
                 />
               </div>
             )}
