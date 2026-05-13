@@ -49,6 +49,17 @@ const processGameMedia = async (game: Game, showId: string): Promise<Game> => {
                 cell.imageUrl, showId, `grid-${rowIdx}-${colIdx}-img`
               );
             }
+            if (Array.isArray(cell.imageUrls) && cell.imageUrls.length > 0) {
+              newCell.imageUrls = await Promise.all(
+                cell.imageUrls.map(async (url: string, i: number) => {
+                  if (url && url.startsWith('data:')) {
+                    return uploadMediaToStorage(url, showId, `grid-${rowIdx}-${colIdx}-img-${i}`);
+                  }
+                  return url;
+                })
+              );
+              if (newCell.imageUrls[0]) newCell.imageUrl = newCell.imageUrls[0];
+            }
             if (cell.audioUrl && cell.audioUrl.startsWith('data:')) {
               newCell.audioUrl = await uploadMediaToStorage(
                 cell.audioUrl, showId, `grid-${rowIdx}-${colIdx}-audio`
