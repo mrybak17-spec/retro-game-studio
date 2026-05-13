@@ -461,16 +461,26 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
         {/* Question Display */}
         {lastCell && (
           <div className="win95-inset p-3 mt-2">
-            {/* Image */}
-            {lastCell.imageUrl && (
-              <div className="mb-2">
-                <img
-                  src={lastCell.imageUrl}
-                  alt="Question"
-                  className="max-w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark"
-                />
-              </div>
-            )}
+            {/* Images (1-3) */}
+            {(() => {
+              const imgs: string[] = (lastCell as any).imageUrls && (lastCell as any).imageUrls.length > 0
+                ? (lastCell as any).imageUrls
+                : (lastCell.imageUrl ? [lastCell.imageUrl] : []);
+              if (imgs.length === 0) return null;
+              const gridCols = imgs.length === 1 ? 'grid-cols-1' : imgs.length === 2 ? 'grid-cols-2' : 'grid-cols-3';
+              return (
+                <div className={`mb-2 grid ${gridCols} gap-2`}>
+                  {imgs.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt={`Question ${i + 1}`}
+                      className="w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark"
+                    />
+                  ))}
+                </div>
+              );
+            })()}
             {/* Audio */}
             {lastCell.audioUrl && (
               <div className="mb-2 flex items-center gap-2">
