@@ -468,15 +468,17 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                 : (lastCell.imageUrl ? [lastCell.imageUrl] : []);
               if (imgs.length === 0) return null;
               const gridCols = imgs.length === 1 ? 'grid-cols-1' : imgs.length === 2 ? 'grid-cols-2' : 'grid-cols-3';
+              const maxHeight = imgs.length === 1 ? 'max-h-[50vh]' : 'max-h-[22vh]';
               return (
-                <div className={`mb-2 grid ${gridCols} gap-2`}>
+                <div className={`mb-2 grid ${gridCols} gap-2 items-start`}>
                   {imgs.map((src, i) => (
-                    <img
-                      key={i}
-                      src={src}
-                      alt={`Question ${i + 1}`}
-                      className="w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark"
-                    />
+                    <div key={i} className="flex items-center justify-center overflow-hidden">
+                      <img
+                        src={src}
+                        alt={`Question ${i + 1}`}
+                        className={`w-full ${maxHeight} object-contain border border-window-border-dark`}
+                      />
+                    </div>
                   ))}
                 </div>
               );
