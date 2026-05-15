@@ -252,29 +252,53 @@ export const BoardGameCreator: React.FC<BoardGameCreatorProps> = ({
                   />
                 </div>
 
-                {/* Image Upload */}
+                {/* Images Upload (up to 3) */}
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs flex items-center gap-1"><Image size={12} /> Image (optional)</label>
-                  {currentCell.imageUrl ? (
-                    <div className="relative">
-                      <img src={currentCell.imageUrl} alt="Question" className="w-full h-16 object-cover win95-input" />
-                      <button className="absolute top-0.5 right-0.5 p-0.5 bg-red-500 text-white rounded" onClick={() => handleCellUpdate(selectedCell.row, selectedCell.col, { imageUrl: undefined })}>
-                        <Trash2 size={10} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="win95-button text-xs text-center cursor-pointer flex items-center justify-center gap-1 py-1">
-                      <Image size={12} /> Upload Image
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onloadend = () => handleCellUpdate(selectedCell.row, selectedCell.col, { imageUrl: reader.result as string });
-                          reader.readAsDataURL(file);
-                        }
-                      }} />
-                    </label>
-                  )}
+                  <label className="text-xs flex items-center gap-1"><Image size={12} /> Question Images (up to 3)</label>
+                  {(() => {
+                    const imgs: string[] = currentCell.imageUrls && currentCell.imageUrls.length > 0
+                      ? currentCell.imageUrls
+                      : (currentCell.imageUrl ? [currentCell.imageUrl] : []);
+                    const updateImgs = (next: string[]) => {
+                      handleCellUpdate(selectedCell.row, selectedCell.col, {
+                        imageUrls: next,
+                        imageUrl: next[0],
+                      });
+                    };
+                    return (
+                      <>
+                        {imgs.length > 0 && (
+                          <div className="grid grid-cols-3 gap-1">
+                            {imgs.map((src, i) => (
+                              <div key={i} className="relative">
+                                <img src={src} alt={`Q${i + 1}`} className="w-full h-14 object-cover win95-input" />
+                                <button
+                                  className="absolute top-0.5 right-0.5 p-0.5 bg-red-500 text-white rounded"
+                                  onClick={() => updateImgs(imgs.filter((_, idx) => idx !== i))}
+                                >
+                                  <Trash2 size={10} />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {imgs.length < 3 && (
+                          <label className="win95-button text-xs text-center cursor-pointer flex items-center justify-center gap-1 py-1">
+                            <Image size={12} /> Add Image ({imgs.length}/3)
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => updateImgs([...imgs, reader.result as string]);
+                                reader.readAsDataURL(file);
+                              }
+                              e.target.value = '';
+                            }} />
+                          </label>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Audio Upload */}
