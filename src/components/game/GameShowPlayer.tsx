@@ -887,11 +887,23 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
         {/* Question Display */}
         {lastRevealedCell && (
           <div className="win95-inset p-3 mt-2">
-            {lastRevealedCell.imageUrl && (
-              <div className="mb-2">
-                <img src={lastRevealedCell.imageUrl} alt="Question" className="max-w-full max-h-[60vh] object-contain mx-auto border border-window-border-dark" />
-              </div>
-            )}
+            {(() => {
+              const imgs: string[] = (lastRevealedCell as any).imageUrls && (lastRevealedCell as any).imageUrls.length > 0
+                ? (lastRevealedCell as any).imageUrls
+                : (lastRevealedCell.imageUrl ? [lastRevealedCell.imageUrl] : []);
+              if (imgs.length === 0) return null;
+              const gridCols = imgs.length === 1 ? 'grid-cols-1' : imgs.length === 2 ? 'grid-cols-2' : 'grid-cols-3';
+              const maxHeight = imgs.length === 1 ? 'max-h-[50vh]' : 'max-h-[22vh]';
+              return (
+                <div className={`mb-2 grid ${gridCols} gap-2 items-start`}>
+                  {imgs.map((src, i) => (
+                    <div key={i} className="flex items-center justify-center overflow-hidden">
+                      <img src={src} alt={`Question ${i + 1}`} className={`w-full ${maxHeight} object-contain border border-window-border-dark`} />
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
             {lastRevealedCell.audioUrl && (
               <div className="mb-2 flex items-center gap-2">
                 <Volume2 className="w-4 h-4" />

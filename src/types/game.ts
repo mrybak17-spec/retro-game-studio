@@ -65,6 +65,7 @@ export interface BoardCell {
   points?: number;
   revealed?: boolean;
   imageUrl?: string;
+  imageUrls?: string[];
   audioUrl?: string;
 }
 
