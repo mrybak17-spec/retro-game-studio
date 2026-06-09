@@ -162,6 +162,8 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
         const phase = gameState.boardPhase || 'phase1';
         const syncedCells = (gameState.boardCells as any[][]) || g.cells;
         const flatCells = syncedCells.flat();
+        const lastId = gameState.lastRevealedCellId;
+        const lastCell = lastId ? flatCells.find((c: any) => c.id === lastId) : null;
         return (
           <div className="flex flex-col gap-2 w-full min-w-0">
             <div className="text-xs font-bold">Board ({phase})</div>
@@ -189,6 +191,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 })}
               </div>
             )}
+            {phase === 'phase2' && lastCell?.audioUrl && <AudioControls send={send} />}
             <Button onClick={() => send({ type: 'revealAnswer' })}>
               <Eye className="w-4 h-4 mr-1" /> Reveal Answer
             </Button>
