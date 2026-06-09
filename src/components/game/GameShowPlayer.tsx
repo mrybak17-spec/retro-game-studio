@@ -524,7 +524,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             {lastCell.audioUrl && (
               <div className="mb-2 flex items-center gap-2">
                 <Volume2 className="w-4 h-4" />
-                <audio src={lastCell.audioUrl} controls className="h-8 flex-1" />
+                <audio ref={audioRef} src={lastCell.audioUrl} controls className="h-8 flex-1" />
               </div>
             )}
             {/* Text Question */}
