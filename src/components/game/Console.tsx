@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
-import { Gamepad2, Plus, Minus, ChevronLeft, ChevronRight, Eye, RotateCcw, SkipForward, X, Power } from 'lucide-react';
+import { Gamepad2, Plus, Minus, ChevronLeft, ChevronRight, Eye, RotateCcw, SkipForward, X, Power, Play, Pause, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchSessionByCodeAny, sendRemoteCommand } from '@/lib/remoteControl';
 import { GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
