@@ -34,6 +34,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const [dragSourceCell, setDragSourceCell] = useState<{ row: number; col: number } | null>(null);
   const [showBoardAnswer, setShowBoardAnswer] = useState(false);
   const [revealedBoardCell, setRevealedBoardCell] = useState<string | null>(null);
+  const [phase1SelectedCell, setPhase1SelectedCell] = useState<{ row: number; col: number } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Sync game state to DB for multiplayer
   const syncToDb = useCallback((overrides?: any) => {
