@@ -875,6 +875,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                           setBoardCells(newCells);
                           setDragItem(null);
                           setDragSourceCell(null);
+                          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
                         }}
                       >
                         <span>{cell.displayText}</span>
