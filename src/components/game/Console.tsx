@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Window, Button, GroupBox } from '@/components/win95';
-import { Gamepad2, Plus, Minus, ChevronLeft, ChevronRight, Eye, RotateCcw, SkipForward, X, Power } from 'lucide-react';
+import { Gamepad2, Plus, Minus, ChevronLeft, ChevronRight, Eye, RotateCcw, SkipForward, X, Power, Play, Pause, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchSessionByCodeAny, sendRemoteCommand } from '@/lib/remoteControl';
 import { GameShow, GridGame, SlidesGame, WheelGame, BoardGame } from '@/types/game';
@@ -96,6 +96,8 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
     switch (currentGame.type) {
       case 'grid': {
         const g = currentGame as GridGame;
+        const lastId = gameState.lastRevealedCellId;
+        const lastCell = lastId ? g.cells.flat().find(c => c.id === lastId) : null;
         return (
           <div className="flex flex-col gap-2">
             <div className="text-xs font-bold">Grid: tap a card to reveal</div>
@@ -115,6 +117,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 );
               })}
             </div>
+            {lastCell?.audioUrl && <AudioControls send={send} />}
             <Button onClick={() => send({ type: 'revealAnswer' })}>
               <Eye className="w-4 h-4 mr-1" /> Reveal Answer
             </Button>
@@ -133,6 +136,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 <div className="mt-1"><strong>Q:</strong> {g.slides[idx].question}</div>
               )}
             </div>
+            {g.slides[idx]?.audioUrl && <AudioControls send={send} />}
             <div className="grid grid-cols-3 gap-1">
               <Button onClick={() => send({ type: 'prevSlide' })}><ChevronLeft className="w-4 h-4" /></Button>
               <Button onClick={() => send({ type: 'revealAnswer' })}><Eye className="w-4 h-4" /></Button>
@@ -159,6 +163,8 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
         const phase = gameState.boardPhase || 'phase1';
         const syncedCells = (gameState.boardCells as any[][]) || g.cells;
         const flatCells = syncedCells.flat();
+        const lastId = gameState.lastRevealedCellId;
+        const lastCell = lastId ? flatCells.find((c: any) => c.id === lastId) : null;
         return (
           <div className="flex flex-col gap-2 w-full min-w-0">
             <div className="text-xs font-bold">Board ({phase})</div>
@@ -186,6 +192,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 })}
               </div>
             )}
+            {phase === 'phase2' && lastCell?.audioUrl && <AudioControls send={send} />}
             <Button onClick={() => send({ type: 'revealAnswer' })}>
               <Eye className="w-4 h-4 mr-1" /> Reveal Answer
             </Button>
@@ -295,17 +302,41 @@ const PlayerScoreRow: React.FC<{ player: any; onAdjust: (delta: number) => void 
   );
 };
 
+const AudioControls: React.FC<{ send: (cmd: any) => void }> = ({ send }) => (
+  <div className="win95-inset p-2 flex items-center gap-2">
+    <Volume2 className="w-4 h-4 shrink-0" />
+    <span className="text-[10px] font-bold flex-1">Question audio</span>
+    <Button onClick={() => send({ type: 'playAudio' })}><Play className="w-3 h-3 mr-1" />Play</Button>
+    <Button onClick={() => send({ type: 'pauseAudio' })}><Pause className="w-3 h-3" /></Button>
+  </div>
+);
+
 const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: string; send: (cmd: any) => void }> = ({ game, cells, send }) => {
   const [pickedColor, setPickedColor] = useState<string | null>(null);
   const [pickedPoints, setPickedPoints] = useState<number | null>(null);
+  const [swapSourceId, setSwapSourceId] = useState<string | null>(null);
   const [endingPhase, setEndingPhase] = useState(false);
 
   const onCellTap = (cellId: string) => {
     if (pickedColor) {
       send({ type: 'assignBoardColor', cellId, color: pickedColor });
-    } else if (pickedPoints !== null) {
-      send({ type: 'assignBoardPoints', cellId, points: pickedPoints });
+      return;
     }
+    if (pickedPoints !== null) {
+      send({ type: 'assignBoardPoints', cellId, points: pickedPoints });
+      return;
+    }
+    // Swap mode: nothing picked → tap two cards to swap them
+    if (!swapSourceId) {
+      setSwapSourceId(cellId);
+      return;
+    }
+    if (swapSourceId === cellId) {
+      setSwapSourceId(null);
+      return;
+    }
+    send({ type: 'swapBoardCells', cellIdA: swapSourceId, cellIdB: cellId });
+    setSwapSourceId(null);
   };
 
   const flatCells = cells.flat();
@@ -313,7 +344,7 @@ const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: stri
   return (
     <div className="flex flex-col gap-2 w-full min-w-0">
       <div className="text-[10px] text-muted-foreground">
-        1. Pick color or points → 2. Tap a card to assign
+        Pick color/points then tap a card to assign — or tap two cards to swap them.
       </div>
 
       <div className="win95-inset p-2 flex flex-col gap-2">
@@ -330,7 +361,7 @@ const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: stri
                 outlineOffset: '-3px',
                 minHeight: 36,
               }}
-              onClick={() => { setPickedColor(c); setPickedPoints(null); }}
+              onClick={() => { setPickedColor(c); setPickedPoints(null); setSwapSourceId(null); }}
             >
               Team {i + 1}
             </button>
@@ -348,15 +379,23 @@ const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: stri
                 outlineOffset: '-3px',
                 minHeight: 36,
               }}
-              onClick={() => { setPickedPoints(v); setPickedColor(null); }}
+              onClick={() => { setPickedPoints(v); setPickedColor(null); setSwapSourceId(null); }}
             >
               {v}
             </button>
           ))}
         </div>
+
+        {(pickedColor || pickedPoints !== null) && (
+          <Button onClick={() => { setPickedColor(null); setPickedPoints(null); }}>
+            Clear selection (swap mode)
+          </Button>
+        )}
       </div>
 
-      <div className="text-[10px] font-bold uppercase">Board</div>
+      <div className="text-[10px] font-bold uppercase">
+        Board {swapSourceId ? '— pick second card to swap' : ''}
+      </div>
       <div
         className="grid gap-1 w-full min-w-0"
         style={{ gridTemplateColumns: `repeat(${game.columns}, minmax(0, 1fr))` }}
@@ -370,9 +409,10 @@ const BoardPhase1Controls: React.FC<{ game: BoardGame; cells: any[][]; sid: stri
               color: cell.teamColor ? '#fff' : '#000',
               minHeight: 40,
               wordBreak: 'break-word',
+              outline: swapSourceId === cell.id ? '3px solid #ffeb3b' : 'none',
+              outlineOffset: '-3px',
             }}
             onClick={() => onCellTap(cell.id)}
-            disabled={!pickedColor && pickedPoints === null}
           >
             <div className="break-words">{cell.displayText}</div>
             {cell.points ? <div className="text-[8px] opacity-80">{cell.points}</div> : null}

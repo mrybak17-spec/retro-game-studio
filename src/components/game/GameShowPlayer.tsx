@@ -34,6 +34,8 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
   const [dragSourceCell, setDragSourceCell] = useState<{ row: number; col: number } | null>(null);
   const [showBoardAnswer, setShowBoardAnswer] = useState(false);
   const [revealedBoardCell, setRevealedBoardCell] = useState<string | null>(null);
+  const [phase1SelectedCell, setPhase1SelectedCell] = useState<{ row: number; col: number } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Sync game state to DB for multiplayer
   const syncToDb = useCallback((overrides?: any) => {
@@ -180,6 +182,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             c.id === cmd.cellId ? { ...c, teamColor: cmd.color } : { ...c }
           ));
           setBoardCells(newCells);
+          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
         }
         break;
       }
@@ -190,7 +193,41 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             c.id === cmd.cellId ? { ...c, points: cmd.points } : { ...c }
           ));
           setBoardCells(newCells);
+          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
         }
+        break;
+      }
+      case 'swapBoardCells': {
+        if (game.type === 'board' && s.boardPhase === 'phase1') {
+          const base = s.boardCells || (game as BoardGame).cells;
+          const newCells = base.map(r => r.map(c => ({ ...c })));
+          let aPos: { r: number; c: number } | null = null;
+          let bPos: { r: number; c: number } | null = null;
+          for (let r = 0; r < newCells.length; r++) {
+            for (let c = 0; c < newCells[r].length; c++) {
+              if (newCells[r][c].id === cmd.cellIdA) aPos = { r, c };
+              if (newCells[r][c].id === cmd.cellIdB) bPos = { r, c };
+            }
+          }
+          if (aPos && bPos) {
+            const tmp = newCells[aPos.r][aPos.c];
+            newCells[aPos.r][aPos.c] = newCells[bPos.r][bPos.c];
+            newCells[bPos.r][bPos.c] = tmp;
+            setBoardCells(newCells);
+            if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
+          }
+        }
+        break;
+      }
+      case 'playAudio': {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(console.error);
+        }
+        break;
+      }
+      case 'pauseAudio': {
+        if (audioRef.current) audioRef.current.pause();
         break;
       }
       case 'nextGame': {
@@ -487,7 +524,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             {lastCell.audioUrl && (
               <div className="mb-2 flex items-center gap-2">
                 <Volume2 className="w-4 h-4" />
-                <audio src={lastCell.audioUrl} controls className="h-8 flex-1" />
+                <audio ref={audioRef} src={lastCell.audioUrl} controls className="h-8 flex-1" />
               </div>
             )}
             {/* Text Question */}
@@ -786,6 +823,27 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                           backgroundColor: cell.teamColor || '#c6c6c6',
                           color: cell.teamColor ? '#fff' : '#333',
                           minHeight: '50px',
+                          outline: phase1SelectedCell?.row === rowIdx && phase1SelectedCell?.col === colIdx ? '3px solid #ffeb3b' : 'none',
+                          outlineOffset: '-3px',
+                        }}
+                        onClick={() => {
+                          if (!boardCells) return;
+                          if (!phase1SelectedCell) {
+                            setPhase1SelectedCell({ row: rowIdx, col: colIdx });
+                            return;
+                          }
+                          if (phase1SelectedCell.row === rowIdx && phase1SelectedCell.col === colIdx) {
+                            setPhase1SelectedCell(null);
+                            return;
+                          }
+                          const newCells = boardCells.map(r => r.map(c => ({ ...c })));
+                          const src = phase1SelectedCell;
+                          const temp = { ...newCells[rowIdx][colIdx] };
+                          newCells[rowIdx][colIdx] = { ...newCells[src.row][src.col] };
+                          newCells[src.row][src.col] = temp;
+                          setBoardCells(newCells);
+                          setPhase1SelectedCell(null);
+                          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
                         }}
                         draggable
                         onDragStart={(e) => {
@@ -817,6 +875,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                           setBoardCells(newCells);
                           setDragItem(null);
                           setDragSourceCell(null);
+                          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
                         }}
                       >
                         <span>{cell.displayText}</span>
@@ -907,7 +966,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             {lastRevealedCell.audioUrl && (
               <div className="mb-2 flex items-center gap-2">
                 <Volume2 className="w-4 h-4" />
-                <audio src={lastRevealedCell.audioUrl} controls className="h-8 flex-1" />
+                <audio ref={audioRef} src={lastRevealedCell.audioUrl} controls className="h-8 flex-1" />
               </div>
             )}
             {lastRevealedCell.question && (
