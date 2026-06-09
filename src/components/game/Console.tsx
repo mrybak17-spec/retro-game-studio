@@ -136,6 +136,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 <div className="mt-1"><strong>Q:</strong> {g.slides[idx].question}</div>
               )}
             </div>
+            {g.slides[idx]?.audioUrl && <AudioControls send={send} />}
             <div className="grid grid-cols-3 gap-1">
               <Button onClick={() => send({ type: 'prevSlide' })}><ChevronLeft className="w-4 h-4" /></Button>
               <Button onClick={() => send({ type: 'revealAnswer' })}><Eye className="w-4 h-4" /></Button>
