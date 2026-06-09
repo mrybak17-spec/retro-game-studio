@@ -182,6 +182,7 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             c.id === cmd.cellId ? { ...c, teamColor: cmd.color } : { ...c }
           ));
           setBoardCells(newCells);
+          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
         }
         break;
       }
@@ -192,7 +193,41 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
             c.id === cmd.cellId ? { ...c, points: cmd.points } : { ...c }
           ));
           setBoardCells(newCells);
+          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
         }
+        break;
+      }
+      case 'swapBoardCells': {
+        if (game.type === 'board' && s.boardPhase === 'phase1') {
+          const base = s.boardCells || (game as BoardGame).cells;
+          const newCells = base.map(r => r.map(c => ({ ...c })));
+          let aPos: { r: number; c: number } | null = null;
+          let bPos: { r: number; c: number } | null = null;
+          for (let r = 0; r < newCells.length; r++) {
+            for (let c = 0; c < newCells[r].length; c++) {
+              if (newCells[r][c].id === cmd.cellIdA) aPos = { r, c };
+              if (newCells[r][c].id === cmd.cellIdB) bPos = { r, c };
+            }
+          }
+          if (aPos && bPos) {
+            const tmp = newCells[aPos.r][aPos.c];
+            newCells[aPos.r][aPos.c] = newCells[bPos.r][bPos.c];
+            newCells[bPos.r][bPos.c] = tmp;
+            setBoardCells(newCells);
+            if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
+          }
+        }
+        break;
+      }
+      case 'playAudio': {
+        if (audioRef.current) {
+          audioRef.current.currentTime = 0;
+          audioRef.current.play().catch(console.error);
+        }
+        break;
+      }
+      case 'pauseAudio': {
+        if (audioRef.current) audioRef.current.pause();
         break;
       }
       case 'nextGame': {
