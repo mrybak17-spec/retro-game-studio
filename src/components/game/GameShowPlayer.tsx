@@ -823,6 +823,27 @@ export const GameShowPlayer: React.FC<GameShowPlayerProps> = ({ sessionId, onClo
                           backgroundColor: cell.teamColor || '#c6c6c6',
                           color: cell.teamColor ? '#fff' : '#333',
                           minHeight: '50px',
+                          outline: phase1SelectedCell?.row === rowIdx && phase1SelectedCell?.col === colIdx ? '3px solid #ffeb3b' : 'none',
+                          outlineOffset: '-3px',
+                        }}
+                        onClick={() => {
+                          if (!boardCells) return;
+                          if (!phase1SelectedCell) {
+                            setPhase1SelectedCell({ row: rowIdx, col: colIdx });
+                            return;
+                          }
+                          if (phase1SelectedCell.row === rowIdx && phase1SelectedCell.col === colIdx) {
+                            setPhase1SelectedCell(null);
+                            return;
+                          }
+                          const newCells = boardCells.map(r => r.map(c => ({ ...c })));
+                          const src = phase1SelectedCell;
+                          const temp = { ...newCells[rowIdx][colIdx] };
+                          newCells[rowIdx][colIdx] = { ...newCells[src.row][src.col] };
+                          newCells[src.row][src.col] = temp;
+                          setBoardCells(newCells);
+                          setPhase1SelectedCell(null);
+                          if (sessionId) mergeGameState(sessionId, { boardCells: newCells }).catch(console.error);
                         }}
                         draggable
                         onDragStart={(e) => {
