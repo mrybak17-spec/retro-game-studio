@@ -96,6 +96,8 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
     switch (currentGame.type) {
       case 'grid': {
         const g = currentGame as GridGame;
+        const lastId = gameState.lastRevealedCellId;
+        const lastCell = lastId ? g.cells.flat().find(c => c.id === lastId) : null;
         return (
           <div className="flex flex-col gap-2">
             <div className="text-xs font-bold">Grid: tap a card to reveal</div>
@@ -115,6 +117,7 @@ export const Console: React.FC<ConsoleProps> = ({ onClose }) => {
                 );
               })}
             </div>
+            {lastCell?.audioUrl && <AudioControls send={send} />}
             <Button onClick={() => send({ type: 'revealAnswer' })}>
               <Eye className="w-4 h-4 mr-1" /> Reveal Answer
             </Button>
