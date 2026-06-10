@@ -387,7 +387,7 @@ const Index = () => {
       />
 
       {/* Desktop icon column — only as wide as needed so it doesn't eat clicks meant for open windows */}
-      <div className="p-4 flex flex-col gap-1 w-24 relative z-10">
+      <div className="p-4 flex flex-col gap-1 w-24 relative">
         {desktopIcons.map((icon, index) => (
           <DesktopIcon
             key={index}
