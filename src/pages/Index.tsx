@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { DesktopIcon, Taskbar, StartMenu, Dialog } from '@/components/win95';
+import { DesktopIcon, Taskbar, StartMenu, Dialog, DesktopWidget } from '@/components/win95';
 import {
   GridGameCreator,
   SlidesGameCreator,
@@ -283,28 +283,43 @@ const Index = () => {
 
   const desktopIcons = [
     {
-      icon: <FileText className="w-8 h-8 text-yellow-300" />,
+      icon: <FileText className="w-6 h-6 text-yellow-900" strokeWidth={2.2} />,
       label: 'New Game Show',
+      tileColor: '#facc15',
+      tileShade: '#b8860b',
+      tileHighlight: '#fff5d7',
       onClick: () => { resetWizardState(); setActiveWindow('newGameWizard'); },
     },
     {
-      icon: <FolderOpen className="w-8 h-8 text-yellow-400" />,
+      icon: <FolderOpen className="w-6 h-6 text-amber-900" strokeWidth={2.2} />,
       label: 'My Games',
+      tileColor: '#fde68a',
+      tileShade: '#92400e',
+      tileHighlight: '#fef3c7',
       onClick: () => setActiveWindow('gamesLibrary'),
     },
     {
-      icon: <Gamepad2 className="w-8 h-8 text-green-400" />,
+      icon: <Gamepad2 className="w-6 h-6 text-emerald-950" strokeWidth={2.2} />,
       label: 'Join Game',
+      tileColor: '#34d399',
+      tileShade: '#065f46',
+      tileHighlight: '#a7f3d0',
       onClick: () => setActiveWindow('joinGame'),
     },
     {
-      icon: <Smartphone className="w-8 h-8 text-pink-300" />,
+      icon: <Smartphone className="w-6 h-6 text-rose-950" strokeWidth={2.2} />,
       label: 'Console',
+      tileColor: '#fb7185',
+      tileShade: '#9f1239',
+      tileHighlight: '#fecdd3',
       onClick: () => setActiveWindow('console'),
     },
     {
-      icon: <HelpCircle className="w-8 h-8 text-cyan-300" />,
+      icon: <HelpCircle className="w-6 h-6 text-cyan-950" strokeWidth={2.2} />,
       label: 'Help',
+      tileColor: '#67e8f9',
+      tileShade: '#155e75',
+      tileHighlight: '#cffafe',
       onClick: () => setDialog({
         show: true,
         title: 'Game Show Maker Help',
@@ -346,19 +361,49 @@ const Index = () => {
   const currentEditGame = getCurrentEditGame();
 
   return (
-    <div className="min-h-screen bg-background relative pb-7 overflow-hidden">
-      <div 
-        className="absolute inset-0 opacity-5"
+    <div
+      className="min-h-screen relative pb-7 overflow-hidden"
+      style={{
+        background:
+          'radial-gradient(circle at 50% 35%, #00a3a3 0%, #008080 55%, #004d4d 100%)',
+      }}
+    >
+      {/* Subtle CRT scanlines */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.06]"
         style={{
-          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)`
+          backgroundImage:
+            'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.6) 2px, rgba(0,0,0,0.6) 3px)',
+        }}
+      />
+      {/* Faint dot grid for depth */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-[0.08]"
+        style={{
+          backgroundImage:
+            'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)',
+          backgroundSize: '24px 24px',
         }}
       />
 
-      <div className="p-4 grid grid-cols-1 gap-1 content-start h-[calc(100vh-28px)]">
+      <div className="p-4 grid grid-cols-1 gap-1 content-start h-[calc(100vh-28px)] relative z-10">
         {desktopIcons.map((icon, index) => (
-          <DesktopIcon key={index} icon={icon.icon} label={icon.label} onDoubleClick={icon.onClick} />
+          <DesktopIcon
+            key={index}
+            icon={icon.icon}
+            label={icon.label}
+            onDoubleClick={icon.onClick}
+            tileColor={icon.tileColor}
+            tileShade={icon.tileShade}
+            tileHighlight={icon.tileHighlight}
+          />
         ))}
       </div>
+
+      {/* Desktop status widget — hidden once a window is open to avoid overlap */}
+      {!activeWindow && (
+        <DesktopWidget hostName="Host" sessionCount={gameShows.length} />
+      )}
 
       {activeWindow === 'newGameWizard' && (
         <NewGameWizard

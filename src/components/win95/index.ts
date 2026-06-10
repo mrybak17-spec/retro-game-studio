@@ -7,3 +7,4 @@ export { Dialog } from './Dialog';
 export { DesktopIcon } from './DesktopIcon';
 export { Taskbar } from './Taskbar';
 export { StartMenu } from './StartMenu';
+export { DesktopWidget } from './DesktopWidget';
