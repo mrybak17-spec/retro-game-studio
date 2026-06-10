@@ -191,13 +191,15 @@
 
 /* Title bar */
 .win95-titlebar {
-  background: linear-gradient(90deg, hsl(var(--titlebar)) 0%, hsl(210 80% 40%) 100%);
+  background: linear-gradient(90deg, hsl(var(--titlebar)) 0%, hsl(210 85% 48%) 60%, hsl(195 90% 55%) 100%);
   color: hsl(var(--titlebar-foreground));
   padding: 0.125rem 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
   font-weight: bold;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .win95-titlebar-inactive {
@@ -231,17 +233,26 @@
 .win95-input {
   background-color: hsl(var(--input));
   color: hsl(var(--input-foreground));
-  padding: 0.125rem 0.25rem;
+  padding: 0.2rem 0.4rem;
   border-top: 1px solid hsl(var(--window-border-dark));
   border-left: 1px solid hsl(var(--window-border-dark));
   border-right: 1px solid hsl(var(--window-border-light));
   border-bottom: 1px solid hsl(var(--window-border-light));
   box-shadow: inset 1px 1px 0 hsl(var(--window-border-darker));
+  transition: box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.win95-input:hover {
+  background-color: #fffefc;
 }
 
 .win95-input:focus {
-  outline: none;
+  outline: 1px dotted hsl(var(--titlebar));
+  outline-offset: -3px;
+  background-color: #fff;
+  box-shadow: inset 1px 1px 0 hsl(var(--window-border-darker)), 0 0 0 2px hsl(210 85% 70% / 0.45);
 }
+
 
 /* Scrollbar styling */
 .win95-scrollbar::-webkit-scrollbar {
