@@ -370,7 +370,7 @@ const Index = () => {
     >
       {/* Subtle CRT scanlines */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.06]"
+        className="absolute inset-0 pointer-events-none opacity-[0.05] z-0"
         style={{
           backgroundImage:
             'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.6) 2px, rgba(0,0,0,0.6) 3px)',
@@ -378,7 +378,7 @@ const Index = () => {
       />
       {/* Faint dot grid for depth */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-[0.08]"
+        className="absolute inset-0 pointer-events-none opacity-[0.07] z-0"
         style={{
           backgroundImage:
             'radial-gradient(rgba(255,255,255,0.5) 1px, transparent 1px)',
@@ -386,7 +386,8 @@ const Index = () => {
         }}
       />
 
-      <div className="p-4 grid grid-cols-1 gap-1 content-start h-[calc(100vh-28px)] relative z-10">
+      {/* Desktop icon column — only as wide as needed so it doesn't eat clicks meant for open windows */}
+      <div className="p-4 flex flex-col gap-1 w-24 relative">
         {desktopIcons.map((icon, index) => (
           <DesktopIcon
             key={index}
